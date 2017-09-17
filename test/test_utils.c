@@ -28,7 +28,7 @@
 
 /* Build executible after installation:
 
-  gcc -std=c99 -g ./test_utils.c -I/opt/amcl/include -L/opt/amcl/lib -lamcl -lmpin -o test_utils
+  gcc -std=c99 -g ./test_utils.c -I/opt/amcl/include -L/opt/amcl/lib -lamcl_core -o test_utils
 
 */
 
@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "mpin.h"
 #include "utils.h"
 #include "randapi.h"
 

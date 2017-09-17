@@ -7,4 +7,4 @@
 # ------------------------------------------------------------------------------
 
 FROM miracl/alldev
-MAINTAINER nicola.asuni@miracl.com
+MAINTAINER support@miracl.com

@@ -40,7 +40,7 @@ typedef struct
 {
     int type;  /**< signature type (ECC or RSA) */
     int hash;  /**< hash type */
-    int curve; /**< elliptic curve used  */
+    int curve; /**< elliptic curve used or RSA key length in bits  */
 } pktype;
 
 

@@ -38,7 +38,7 @@ FROM ${DOCKERDEV}
 RUN mkdir -p ${PRJPATH}
 ADD ./ ${PRJPATH}
 WORKDIR ${PRJPATH}
-RUN GOPATH=/root go get github.com/stretchr/testify/assert && \
+RUN GOPATH=/root go get -u -v github.com/stretchr/testify/assert && \
 make ${MAKETARGET} || (echo \$? > target/make.exit)
 EOM
 
@@ -56,7 +56,7 @@ docker cp ${CONTAINER_ID}:"${PRJPATH}/target" ./
 
 # Change paths of coverage report (if any)
 CURRENTDIR=`pwd`
-sed -i "s|${PRJPATH}/|${CURRENTDIR}/|" ${CURRENTDIR}/target/LINUX_64BIT_BN254_CX_COVERAGE/coverage/amcl.info || true
+sed -i "s|${PRJPATH}/|${CURRENTDIR}/|" ${CURRENTDIR}/target/LINUX_64BIT_COVERAGE/coverage/amcl.info || true
 
 # Remove the temporary container and image
 docker rm -f ${CONTAINER_ID} || true
