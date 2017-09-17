@@ -35,22 +35,21 @@ void amcl_version(void)
     printf("AMCL Version: %d.%d.%d\n", AMCL_VERSION_MAJOR, AMCL_VERSION_MINOR, AMCL_VERSION_PATCH);
     printf("OS: %s\n", OS);
     printf("CHUNK: %d\n", CHUNK);
-    printf("CURVETYPE: %s\n", CURVETYPE_DESC);
-    printf("CHOICE: %s\n", CHOICE_DESC);
-    printf("FFLEN: %d\n", FFLEN);
-    printf("MODTYPE: %s\n", MODTYPE_DESC);
-    printf("MBITS - Number of bits in Modulus: %d\n", MBITS);
-    printf("MODBYTES - Number of bytes in Modulus: %d\n", MODBYTES);
-    printf("BASEBITS - Numbers represented to base 2*BASEBITS: %d\n", BASEBITS);
-    printf("NLEN - Number of words in BIG: %d\n", NLEN);
+    // printf("CURVETYPE: %s\n", CURVETYPE_DESC);
+    // printf("CHOICE: %s\n", CHOICE_DESC);
+    // printf("MODTYPE: %s\n", MODTYPE_DESC);
+    // printf("MBITS - Number of bits in Modulus: %d\n", MBITS);
+    // printf("MODBYTES - Number of bytes in Modulus: %d\n", MODBYTES);
+    // printf("BASEBITS - Numbers represented to base 2*BASEBITS: %d\n", BASEBITS);
+    // printf("NLEN - Number of words in BIG: %d\n", NLEN);
 
-    BIG p, r;
-    BIG_rcopy(p,Modulus);
-    printf("Modulus p = ");
-    BIG_output(p);
-    printf("\n");
-    BIG_rcopy(r,CURVE_Order);
-    printf("CURVE_Order r = ");
-    BIG_output(r);
-    printf("\n");
+    // BIG p, r;
+    // BIG_rcopy(p,Modulus);
+    // printf("Modulus p = ");
+    // BIG_output(p);
+    // printf("\n");
+    // BIG_rcopy(r,CURVE_Order);
+    // printf("CURVE_Order r = ");
+    // BIG_output(r);
+    // printf("\n");
 }

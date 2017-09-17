@@ -20,13 +20,12 @@ under the License.
 /* AMCL X.509 Functions */
 
 // To run test program, define HAS_MAIN
-// gcc x509.c ecdh.c rsa.c amcl.a -o x509.exe
+// gcc -std=c99 x509.c  amcl.a -o x509.exe
 
-// #define HAS_MAIN
+//#define HAS_MAIN
 
 #include <stdio.h>
-#include "ecdh.h"
-#include "rsa.h"
+#include "amcl.h"  // for octet support only
 #include "x509.h"
 
 // ASN.1 tags
@@ -50,19 +49,22 @@ under the License.
 
 #define ECC 1
 #define RSA 2
-#define ECC_H256 11
-#define ECC_H384 12
-#define ECC_H512 13
-#define RSA_H256 21
-#define RSA_H384 22
-#define RSA_H512 23
 
-// return xxxxxxxxxxxxxxxx | xxxx | xxxx
-//        2048 | 2 | 3  -> 2048-bit RSA with SHA512
+// Supported Hash functions
 
 #define H256 2
 #define H384 3
 #define H512 4
+
+// Supported Curves
+
+#define NIST256 0    /**< For the NIST 256-bit standard curve - WEIERSTRASS only */
+#define C25519 1     /**< Bernstein's Modulus 2^255-19 - EDWARDS or MONTGOMERY only */
+#define BRAINPOOL 2  /**< For Brainpool 256-bit curve - WEIERSTRASS only */
+#define ANSSI 3      /**< For French 256-bit standard curve - WEIERSTRASS only */
+#define NIST384 10   /**< For the NIST 384-bit standard curve - WEIERSTRASS only */
+#define NIST521 12   /**< For the NIST 521-bit standard curve - WEIERSTRASS only */
+
 
 // Define some OIDs
 
@@ -531,6 +533,7 @@ pktype X509_extract_public_key(octet *c,octet *key)
         for (i=0; j<fin; j++)
             key->val[i++]= c->val[j];
 
+        ret.curve=8*len;
     }
     return ret;
 }
@@ -695,21 +698,25 @@ void print_date(char *des,octet *c,int index)
 
 #ifdef HAS_MAIN
 
+/* This simple driver program is hard-wired to support just one elliptic curve and one
+   RSA bit length. To change replace the text string NIST256 in the main program to
+   another curve and 2048 to some other value, where the curve and the RSA bit length
+   are suppported by the library. Of course a more elaborate program could support
+   muliple curves simultaneously */
+
+#define CHOICE NIST256
+
+
+
 /* test driver program */
 // Sample Certs. Uncomment one CA cert and one example cert. Note that AMCL library must be built to support given curve.
 // Sample Certs all created using OpenSSL - see http://blog.didierstevens.com/2008/12/30/howto-make-your-own-cert-with-openssl/
 // Note - SSL currently only supports NIST curves. Howevever version 1.1.0 of OpenSSL now supports C25519
 
-#if CHOICE==C25519
-// ** CA is RSA 2048-bit based - for use with C25519 build of the library - assumes use of SHA256 in Certs
-
-char ca_b64[]="MIID6zCCAtOgAwIBAgIJALJxywTGMUA7MA0GCSqGSIb3DQEBCwUAMIGLMQswCQYDVQQGEwJJRTEQMA4GA1UECAwHSXJlbGFuZDEPMA0GA1UEBwwGRHVibGluMQ8wDQYDVQQKDAZNSVJBQ0wxDTALBgNVBAsMBGxhYnMxEzARBgNVBAMMCk1pa2UgU2NvdHQxJDAiBgkqhkiG9w0BCQEWFW1pa2Uuc2NvdHRAbWlyYWNsLmNvbTAeFw0xNjA2MzAxNzQyNDFaFw0yMTA2MzAxNzQyNDFaMIGLMQswCQYDVQQGEwJJRTEQMA4GA1UECAwHSXJlbGFuZDEPMA0GA1UEBwwGRHVibGluMQ8wDQYDVQQKDAZNSVJBQ0wxDTALBgNVBAsMBGxhYnMxEzARBgNVBAMMCk1pa2UgU2NvdHQxJDAiBgkqhkiG9w0BCQEWFW1pa2Uuc2NvdHRAbWlyYWNsLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAPCTPcPWgiI0ka5Czd0ZzW+gTaMEe9QW7FGu5+9fS6ALrCpdbxdwDX8+OQXZuQJpLYEAIq1pDh3fVQguH/jUM9gQQrS2Lmz3KhXC/J3yv85FRotCGv13ztapMedTy2IxzbtPvoQQc+IAlUPX6DtD8JqBoAstrlQUnkMChKztMGR2OERdjNzXmXm+KMMPlZzk+EvRwCornVA+SB5QAWj7y/3ISFo0y1WG8ewoQEx3HQYrjXbQP1VTdiLW7dHPQP86XKoTMtTBEYWuFhKB9ClCeu4Qqqxqa9UPIVfdro7SoZScCt+OX4KhzLnOCFupoLxE+yTDhDpYcCcmI1yglCv9DpMCAwEAAaNQME4wHQYDVR0OBBYEFFH18YEMoxms7121N/nQ+Wm3b5smMB8GA1UdIwQYMBaAFFH18YEMoxms7121N/nQ+Wm3b5smMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBALCUob0y2O4DSzsqG76yrtCxXWxDdgjSkHKzwFK62BzZK5EuCDJrVgCyoLX0SvYvoT9x0wtS+bxJ7TNEGn7Rkp5/iSQCUSF7sVRoHqzErk70xVKKDy5FS+zre8k08nJrtRg2u1PmY95NO1SE96BtUVLs+8rQuqEX283tqlmqE/SF2+lxOb0WaVrya4oCJfj/XT83pRTcd5w9i7huWltMbKbagkmlQ/5q9Ayp/Jh1lLXmxr+/xEbZ2xEop/y+mgVF0vLxap7R5toBA0Yk7vvirlYv0hZGqGi5lBc9VeUqm1H/7XCi5xRU3AtJ4QRk4Z1xUa4qAPKfiqlPKd1dVe3Ah3w=";
-
-// an ECC 255-bit CA-signed cert
-char cert_b64[]="MIICqjCCAZICCQCk9jKdJYtnjDANBgkqhkiG9w0BAQsFADCBizELMAkGA1UEBhMCSUUxEDAOBgNVBAgMB0lyZWxhbmQxDzANBgNVBAcMBkR1YmxpbjEPMA0GA1UECgwGTUlSQUNMMQ0wCwYDVQQLDARsYWJzMRMwEQYDVQQDDApNaWtlIFNjb3R0MSQwIgYJKoZIhvcNAQkBFhVtaWtlLnNjb3R0QG1pcmFjbC5jb20wHhcNMTYwNjMwMTc0NjQ4WhcNMTYwNzMwMTc0NjQ4WjCBjDELMAkGA1UEBhMCSUUxEDAOBgNVBAgMB0lyZWxhbmQxDzANBgNVBAcMBkR1YmxpbjEPMA0GA1UECgwGTUlSQUNMMQ0wCwYDVQQLDARsYWJzMRgwFgYDVQQDDA9LZWFsYW4gTWNDdXNrZXIxIDAeBgkqhkiG9w0BCQEWEWtlYWxhbkBtaXJhY2wuY29tMDkwFAYHKoZIzj0CAQYJKwYBBAHaRw8BAyEASiRQmhO9PP+SqodOhXYrnSlcyAOog63E6a4KLDFvAzEwDQYJKoZIhvcNAQELBQADggEBALByfCM/EhdqWBrEnDHtH2/U8xr1eSylHdcfnDSDR+X6KXH5rIJ/397lZQMHB6QSsEiVrWzfFDFPPjDN3xEDsZw09ZTT+L8Wi5P3UKR1gtawQCx3ciKEywAU1CU2dV05gvyebqIsbFUyH7jOlj6/1hIx9zaiLcoEex6D55MYQuWo664HF3CNdJFk1k4HF+fclRhyl4iryp0F9p0Wl5vyn96kg0NwaBZG860oCWDHZsjRq1JeSSaRf9CKNXWbQwjByeEcDphpprqmoVcI60cC0TvZZm1x4y7vjCXLD6uCDw3P7fnSp40yce64+IKUr8/cS+QYus58KHdLaLXsojZHL3c=";
-#endif
-
 #if CHOICE==NIST256
+
+#include "ecdh_NIST256.h"
+#include "rsa_2048.h"
 
 // ** CA is RSA 2048-bit based - for use with NIST256 build of library - assumes use of SHA256 in Certs
 // RSA 2048 Self-Signed CA cert
@@ -731,6 +738,9 @@ char cert_b64[]="MIICojCCAYoCAQMwDQYJKoZIhvcNAQELBQAwdDELMAkGA1UEBhMCSUUxEDAOBgN
 
 #if CHOICE==NIST384
 
+#include "ecdh_NIST384.h"
+#include "rsa_3072.h"
+
 // ** CA is RSA 3072-bit based  - for use with NIST384 build of library - assumes use of SHA384 in Certs
 // RSA 3072 Self-Signed CA cert
 char ca_b64[]="MIIElzCCAv+gAwIBAgIJAJA+8OyEeK4FMA0GCSqGSIb3DQEBDAUAMGIxCzAJBgNVBAYTAklFMRAwDgYDVQQIDAdJcmVsYW5kMQ8wDQYDVQQHDAZEdWJsaW4xITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDENMAsGA1UEAwwETWlrZTAeFw0xNTExMjYxNDQ0MDBaFw0yMDExMjUxNDQ0MDBaMGIxCzAJBgNVBAYTAklFMRAwDgYDVQQIDAdJcmVsYW5kMQ8wDQYDVQQHDAZEdWJsaW4xITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDENMAsGA1UEAwwETWlrZTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBANvNO8ahsanxzqwkp3A3bujwObJoP3xpOiAAxwGbW867wx4EqBjPRZP+Wcm9Du6e4Fx9U7tHrOLocIUUBcRrmxUJ7Z375hX0cV9yuoYPNv0o2klJhB8+i4YXddkOrSmDLV4r46Ytt1/gjImziat6ZJALdd/uIuhaXwjzy1fFqSEBpkzhrFwFP9MG+5CgbRQed+YxZ10l/rjk+h3LKq9UFsxRCMPYhBFgmEKAVTMnbTfNNxawTRCKtK7nxxruGvAEM+k0ge5rvybERQ0NxtizefBSsB3Q6QVZOsRJiyC0HQhE6ZBHn4h3A5nHUZwPeh71KShw3uMPPB3Kp1pb/1Euq8azyXSshEMPivvgcGJSlm2b/xqsyrT1tie82MqB0APYAtbx3i5q8p+rD143NiNO8fzCq/J+EV82rVyvqDxf7AaTdJqDbZmnFRbIcrLcQdigWZdSjc+WxrCeOtebRmRknuUmetsCUPVzGv71PLMUNQ2qEiq8KGWmnMBJYVMl96bPxwIDAQABo1AwTjAdBgNVHQ4EFgQUsSjrHeZ5TNI2tMcQd6wUnFpU8DcwHwYDVR0jBBgwFoAUsSjrHeZ5TNI2tMcQd6wUnFpU8DcwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQwFAAOCAYEADlnC1gYIHpVf4uSuBpYNHMO324hhGajHNraHYQAoYc0bW4OcKi0732ib5CHDrV3LCxjxF4lxZVo61gatg5LnfJYldXc0vP0GQRcaqC6lXlLb8ZJ0O3oPgZkAqpzc+AQxYW1wFxbzX8EJU0stSwAuxkgs9bwg8tTxIhDutrcjQl3osnAqGDyM+7VAG5QLRMzxiZumyD7s/xBUOa+L6OKXf4QRr/SH/rPU8H+ENaNkv4PApSVzCgTBPOFBIzqEuO4hcQI0laUopsp2kK1w6wYB5oY/rR/O6lNNfB2WEtfdIhdbQru4cUE3boKerM8Mjd21RuerAuK4X8cbDudHIFsaopGSNuzZwPo/bu0OsmZkORxvdjahHJ0G3/6jM6nEDoIy6mXUCGOUOMhGQKCa8TYlZdPKz29QIxk6HA1wCA38MxUo/29Z7oYw27Mx3x8Gcr+UA4vc+oBN3IEzRmhRZKAYQ10MhYPx3NmYGZBDqHvT06oG5hysTCtlVzx0Tm+o01JQ";
@@ -750,6 +760,9 @@ char cert_b64[]="MIIDCDCCAXACAQcwDQYJKoZIhvcNAQEMBQAwYjELMAkGA1UEBhMCSUUxEDAOBgN
 #endif
 
 #if CHOICE==NIST521
+
+#include "ecdh_NIST521.h"
+#include "rsa_4096.h"
 
 // ** CA is ECC 521 based - - for use with NIST521 build of library - assumes use of SHA512 in Certs
 // ECC 521 Self-Signed CA Cert
@@ -786,7 +799,7 @@ octet H= {0,sizeof(h),h};
 char hh[5000];
 octet HH= {0,sizeof(hh),hh};
 
-char hp[RFS];
+char hp[RFS_2048];
 octet HP= {0,sizeof(hp),hp};
 
 
@@ -794,7 +807,7 @@ int main()
 {
     int res,len,sha;
     int c,ic;
-    rsa_public_key PK;
+    rsa_public_key_2048 PK;
     pktype st,ca,pt;
 
     printf("First check signature on self-signed cert and extract CA public key\n");
@@ -885,7 +898,7 @@ int main()
             printf("Curve is not supported\n");
             return 0;
         }
-        res=ECP_PUBLIC_KEY_VALIDATE(1,&CAKEY);
+        res=ECP_NIST256_PUBLIC_KEY_VALIDATE(1,&CAKEY);
         if (res!=0)
         {
             printf("ECP Public Key is invalid!\n");
@@ -904,7 +917,7 @@ int main()
             return 0;
         }
 
-        if (ECPVP_DSA(sha,&CAKEY,&H,&R,&S)!=0)
+        if (ECP_NIST256_VP_DSA(sha,&CAKEY,&H,&R,&S)!=0)
         {
             printf("***ECDSA Verification Failed\n");
             return 0;
@@ -915,8 +928,13 @@ int main()
 
     if (ca.type==RSA)
     {
+        if (ca.curve!=2048)
+        {
+            printf("RSA bit size is not supported\n");
+            return 0;
+        }
         PK.e=65537; // assuming this!
-        FF_fromOctet(PK.n,&CAKEY,FFLEN);
+        RSA_2048_fromOctet(PK.n,&CAKEY);
 
         sha=0;
 
@@ -930,7 +948,7 @@ int main()
         }
         PKCS15(sha,&H,&HP);
 
-        RSA_ENCRYPT(&PK,&SIG,&HH);
+        RSA_2048_ENCRYPT(&PK,&SIG,&HH);
 
         if (OCT_comp(&HP,&HH))
             printf("RSA Signature/Verification succeeded \n");
@@ -1024,7 +1042,7 @@ int main()
     if (ca.type==ECC)
     {
         printf("Checking CA's ECC Signature on Cert\n");
-        res=ECP_PUBLIC_KEY_VALIDATE(1,&CAKEY);
+        res=ECP_NIST256_PUBLIC_KEY_VALIDATE(1,&CAKEY);
         if (res!=0)
             printf("ECP Public Key is invalid!\n");
         else printf("ECP Public Key is Valid\n");
@@ -1040,7 +1058,7 @@ int main()
             return 0;
         }
 
-        if (ECPVP_DSA(sha,&CAKEY,&H,&R,&S)!=0)
+        if (ECP_NIST256_VP_DSA(sha,&CAKEY,&H,&R,&S)!=0)
             printf("***ECDSA Verification Failed\n");
         else
             printf("ECDSA Signature/Verification succeeded \n");
@@ -1050,7 +1068,7 @@ int main()
     {
         printf("Checking CA's RSA Signature on Cert\n");
         PK.e=65537; // assuming this!
-        FF_fromOctet(PK.n,&CAKEY,FFLEN);
+        RSA_2048_fromOctet(PK.n,&CAKEY);
 
         sha=0;
 
@@ -1064,7 +1082,7 @@ int main()
         }
         PKCS15(sha,&H,&HP);
 
-        RSA_ENCRYPT(&PK,&SIG,&HH);
+        RSA_2048_ENCRYPT(&PK,&SIG,&HH);
 
         if (OCT_comp(&HP,&HH))
             printf("RSA Signature/Verification succeeded \n");

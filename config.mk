@@ -3,15 +3,11 @@
 # size of chunk in bits which is wordlength of computer = 16, 32 or 64.  (see arch.h)
 AMCL_CHUNK:=64
 
-# Current choice of Elliptic Curve (see amcl.h)
-AMCL_CHOICE:=BN254_CX
+# Current choice of Elliptic Curve NIST256 C25519 ED25519 BRAINPOOL ANSSI NUMS256E NUMS256W NUMS384E NUMS384W NUMS512E NUMS512W HIFIVE GOLDILOCKS NIST384 C41417 NIST521 BN254 BN254CX BLS383
+AMCL_CURVE:=ED25519,NIST256,GOLDILOCKS,BN254
 
-# type of curve  (see amcl.h) 
-AMCL_CURVETYPE:=WEIERSTRASS
-
-# 2^n multiplier of BIGBITS to specify supported Finite Field size, 
-# e.g 2048=256*2^3 where BIGBITS=256  (see amcl.h) 
-AMCL_FFLEN:=8
+# RSA security level: 2048 3072 4096
+AMCL_RSA:=2048,3072
 
 # Build type Debug Release Coverage ASan Check CheckFull
 CMAKE_BUILD_TYPE:=Release
@@ -23,25 +19,22 @@ CMAKE_INSTALL_PATH:=/opt/amcl
 AMCL_TEST:=ON
 
 # Build Shared Libraries ON/OFF
-AMCL_BUILD_SHARED_LIBS:=OFF
+AMCL_BUILD_SHARED_LIBS:=ON
 
 # Build Python wrapper ON/OFF
 AMCL_BUILD_PYTHON:=OFF
 
 # Build Golang wrapper ON/OFF
-AMCL_BUILD_GO:=ON
+AMCL_BUILD_GO:=OFF
 
 # Build MPIN ON/OFF
 AMCL_BUILD_MPIN:=ON
 
 # Build WCC ON/OFF
-AMCL_BUILD_WCC:=OFF
+AMCL_BUILD_WCC:=ON
 
 # Build Doxygen ON/OFF
 AMCL_BUILD_DOXYGEN:=OFF
-
-# Anonymous authentication for M-Pin Full ON/OFF
-AMCL_USE_ANONYMOUS:=OFF
 
 # Configure PIN 
 AMCL_MAXPIN:=10000

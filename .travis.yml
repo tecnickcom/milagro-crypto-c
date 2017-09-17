@@ -23,4 +23,4 @@ script:
   - MAKETARGET=buildall make dbuild
 
 after_success:
-  - coveralls-lcov /home/travis/build/miracl/milagro-crypto-c/target/LINUX_64BIT_BN254_CX_COVERAGE/coverage/amcl.info
+  - coveralls-lcov /home/travis/build/miracl/milagro-crypto-c/target/LINUX_64BIT_COVERAGE/coverage/amcl.info

@@ -98,6 +98,15 @@ only be one entry in the GOPATH
 If you have docker installed then type ```make dbuild``` to build and test
 the library in a docker container.
 
+##### Multiple curves and RSA security levels
+
+The default build (see config.mk) uses multiple curves and RSA security 
+levels. There is an example called testall.c in the examples directory that 
+shows how to write a program to use the different curves etc in a single 
+program. To build and run the example use this script;
+
+    buildMulti.sh
+
 ##### Manual build
 
 NOTE: The default build is for 64 bit machines
@@ -125,6 +134,10 @@ NOTE: The build can be configured by setting flags on the command line, for exam
 
     cmake -DAMCL_CHUNK=64 ../..
     cmake -D CMAKE_INSTALL_PREFIX=/opt/amcl -D AMCL_CHUNK=64 -D BUILD_WCC=on ../..
+
+It is possible also to build the library supporting more than one elliptic curve and more  than one RSA security level, for example
+
+	cmake -DAMCL_CURVE=BN254CX,NIST254 -DAMCL_RSA=2048,3072 ../..
 
 To list other available CMake options, use:
 

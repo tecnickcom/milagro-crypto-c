@@ -35,17 +35,17 @@
 #define ARCH_H
 
 
+
+
 /*** START OF USER CONFIGURABLE SECTION - set architecture ***/
 
 #ifdef CMAKE
 #define CHUNK @AMCL_CHUNK@  /**< size of chunk in bits = wordlength of computer = 16, 32 or 64. Note not all curve options are supported on 16-bit processors - see rom.c */
 #else
-#define CHUNK 32		/**< size of chunk in bits = wordlength of computer = 16, 32 or 64. Note not all curve options are supported on 16-bit processors - see rom.c */
+#define CHUNK @WL@		/**< size of chunk in bits = wordlength of computer = 16, 32 or 64. Note not all curve options are supported on 16-bit processors - see rom.c */
 #endif
 
 /*** END OF USER CONFIGURABLE SECTION ***/
-
-
 
 /* Create Integer types */
 /* Support for C99?  Note for GCC need to explicitly include -std=c99 in command line */
@@ -60,12 +60,14 @@
 #ifndef C99  /* You are on your own! These are for Microsoft C */
 #define sign32 __int32			/**< 32-bit signed integer */
 #define sign8 signed char		/**< 8-bit signed integer */
+#define sign64 long long		/**< 64-bit signed integer */
 #define unsign32 unsigned __int32 /**< 32-bit unsigned integer */
 #define unsign64 unsigned long long  /**< 64-bit unsigned integer */
 #else
 #include <stdint.h>
 #define sign8 int8_t			/**< 8-bit signed integer */
 #define sign32 int32_t			/**< 32-bit signed integer */
+#define sign64 int64_t			/**< 64-bit signed integer */
 #define unsign32 uint32_t		/**< 32-bit unsigned integer */
 #define unsign64 uint64_t		/**< 64-bit unsigned integer */
 #endif
@@ -104,14 +106,15 @@
 /**< Note - no 128-bit type available    */
 #else
 #define chunk int64_t		/**< C type corresponding to word length */
-#ifdef __GNUC__
-#define dchunk __int128		/**< Always define double length chunk type if available - GCC supports 128 bit type  ??? */
+#if defined(__SIZEOF_INT128__) && __SIZEOF_INT128__ == 16
+#define dchunk __int128                /**< Always define double length chunk type if available (supported by GCC & Clang on 64-bit architectures) */
 #endif
 #endif
 #endif
 
 #ifdef dchunk
-#define COMBA      /**< Use COMBA method for faster BN muls, sqrs and reductions */
+#define COMBA      /**< Use COMBA method for faster muls, sqrs and reductions */
 #endif
+
 
 #endif

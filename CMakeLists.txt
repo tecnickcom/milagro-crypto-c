@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.1)
 project (AMCL)
 
 add_definitions(-DCMAKE)
@@ -24,7 +24,6 @@ option (BUILD_MPIN "Build MPIN" ON)
 option (BUILD_WCC "Build WCC" ON)
 option (BUILD_DOXYGEN "Build Doxygen" ON)
 option (USE_PATENTS "Use patents for G1 and G2 multiplication" OFF)
-option (USE_ANONYMOUS "Anonymous authentication for M-Pin Full" OFF)
 option (DEBUG_REDUCE "Print debug message for field reduction" OFF)
 option (DEBUG_NORM "Detect digit overflow" OFF)
 option (GET_STATS "Debug statistics" OFF)
@@ -96,84 +95,43 @@ set_property(CACHE AMCL_CHUNK PROPERTY STRINGS ${Word_Length_Values})
 message(STATUS "AMCL_CHUNK='${AMCL_CHUNK}'")
 
 # Select Field
-set(AMCL_CHOICE "BN254_CX" CACHE STRING "Choice of Field. See ./include/amcl.h for explanation")
-set(Field_Values "NIST256;C25519;BRAINPOOL;ANSSI;MF254;MS255;MF256;MS256;HIFIVE;GOLDILOCKS;NIST384;C41417;NIST521;BN454;BN646;BN254;BN254_CX;BN254_T;BN254_T2;BLS455")
-set_property(CACHE AMCL_CHOICE PROPERTY STRINGS ${Field_Values})
-message(STATUS "AMCL_CHOICE='${AMCL_CHOICE}'")
+set(AMCL_CURVE "BN254CX" CACHE STRING "Choice of Field. See ./include/amcl.h for explanation")
+set(Curves_values "NIST256;C25519;ED25519;BRAINPOOL;ANSSI;NUMS256E;NUMS256W;NUMS384E;NUMS384W;NUMS512E;NUMS512W;HIFIVE;GOLDILOCKS;NIST384;C41417;NIST521;BN254;BN254CX;BLS383")
+set_property(CACHE AMCL_CURVE PROPERTY STRINGS ${Curves_values})
+message(STATUS "AMCL_CURVE='${AMCL_CURVE}'")
 
-# Select Curve type
-set(AMCL_CURVETYPE "WEIERSTRASS" CACHE STRING "Choice of Curve. See ./include/amcl.h for explanation")
-set(Curve_Values "WEIERSTRASS;EDWARDS;MONTGOMERY")
-set_property(CACHE AMCL_CURVETYPE PROPERTY STRINGS ${Curve_Values})
-message(STATUS "AMCL_CURVETYPE='${AMCL_CURVETYPE}'")
-
-# Select Finite field support
-set(AMCL_FFLEN "8" CACHE STRING "Finite field support. See ./include/amcl.h for explanation")
-set(ff_len_values "4;8;16")
-set_property(CACHE AMCL_FFLEN PROPERTY STRINGS ${ff_Len_values})
-message(STATUS "AMCL_FFLEN='${AMCL_FFLEN}'")
-
-# configure arch header file to pass CMake settings
-# to the source code
-configure_file (
-  "${PROJECT_SOURCE_DIR}/include/arch.h"
-  "${PROJECT_BINARY_DIR}/include/arch.h"
-  )
-
-# configure amcl header file to pass CMake settings
-# to the source code
-configure_file (
-  "${PROJECT_SOURCE_DIR}/include/amcl.h"
-  "${PROJECT_BINARY_DIR}/include/amcl.h"
-  )
+# Select RSA security level
+set(AMCL_RSA "2048" CACHE STRING "RSA level of security supported. See ./include/rsa_WWW.h for explanation")
+set(rsa_values "2048;3072;4096")
+set_property(CACHE AMCL_RSA PROPERTY STRINGS ${rsa_values})
+message(STATUS "AMCL_RSA='${AMCL_RSA}'")
 
 # Configure PIN
-set(AMCL_MAXPIN 10000 CACHE STRING "Maximum PIN value. See ./include/mpin.h for explanation")
-set(AMCL_PBLEN 14 CACHE STRING "Maximum PIN value in bits. See ./include/mpin.h for explanation")
+set(AMCL_MAXPIN 10000 CACHE STRING "Maximum PIN value. See ./include/mpin_ZZZ.h for explanation")
+set(AMCL_PBLEN 14 CACHE STRING "Maximum PIN value in bits. See ./include/mpin_ZZZ.h for explanation")
 message(STATUS "AMCL_MAXPIN=${AMCL_MAXPIN}")
 
-# configure mpin header file to pass CMake settings
-# to the source code
-configure_file (
-  "${PROJECT_SOURCE_DIR}/include/mpin.h"
-  "${PROJECT_BINARY_DIR}/include/mpin.h"
-  )
-
-# Build libx509
-if( ((AMCL_CHOICE STREQUAL "NIST256") AND (AMCL_FFLEN STREQUAL "8")) OR 
-    ((AMCL_CHOICE STREQUAL "NIST256") AND (AMCL_FFLEN STREQUAL "16")) OR
-    ((AMCL_CHOICE STREQUAL "C25519") AND (AMCL_FFLEN STREQUAL "8") AND (AMCL_CURVETYPE STREQUAL "EDWARDS")) OR
-    ((AMCL_CHOICE STREQUAL "NIST384") AND (AMCL_FFLEN STREQUAL "8")) OR
-    ((AMCL_CHOICE STREQUAL "NIST521") AND (AMCL_FFLEN STREQUAL "8")) )
+if(AMCL_CURVE MATCHES "NIST256" OR AMCL_CURVE MATCHES "C25519" OR AMCL_CURVE MATCHES "NIST384" OR AMCL_CURVE MATCHES "NIST521")
   message(STATUS "Build x.509")
   set(BUILD_X509 ON)
-endif( ((AMCL_CHOICE STREQUAL "NIST256") AND (AMCL_FFLEN STREQUAL "8")) OR 
-    ((AMCL_CHOICE STREQUAL "NIST256") AND (AMCL_FFLEN STREQUAL "16")) OR
-    ((AMCL_CHOICE STREQUAL "C25519") AND (AMCL_FFLEN STREQUAL "8") AND (AMCL_CURVETYPE STREQUAL "EDWARDS")) OR
-    ((AMCL_CHOICE STREQUAL "NIST384") AND (AMCL_FFLEN STREQUAL "8")) OR
-    ((AMCL_CHOICE STREQUAL "NIST521") AND (AMCL_FFLEN STREQUAL "8")) )
+endif(AMCL_CURVE MATCHES "NIST256" OR AMCL_CURVE MATCHES "C25519" OR AMCL_CURVE MATCHES "NIST384" OR AMCL_CURVE MATCHES "NIST521")
 
-if(NOT(AMCL_CHOICE MATCHES "BN" OR AMCL_CHOICE MATCHES "BLS"))
+if(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
   message(STATUS "Curve choice prevents MPIN being built")
   set(BUILD_MPIN OFF)
-endif(NOT(AMCL_CHOICE MATCHES "BN" OR AMCL_CHOICE MATCHES "BLS"))
+endif(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
 
-if(NOT(AMCL_CHOICE MATCHES "BN" OR AMCL_CHOICE MATCHES "BLS"))
+if(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
   message(STATUS "Curve choice prevents WCC being built")
   set(BUILD_WCC OFF)
-endif(NOT(AMCL_CHOICE MATCHES "BN" OR AMCL_CHOICE MATCHES "BLS"))
+endif(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
 
 # test configuration
 if(BUILD_MPIN OR BUILD_WCC)
-  set(MPIN_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN time permits")
-  set(MPIN_RANDOM_TESTS 10 CACHE STRING "Number of random M-PIN tests")
-  message(STATUS "MPIN_TIME_PERMIT_TESTS=${MPIN_TIME_PERMIT_TESTS}")
-  message(STATUS "MPIN_RANDOM_TESTS=${MPIN_RANDOM_TESTS}")
-  # Configure test variables
-  configure_file (
-    "${PROJECT_SOURCE_DIR}/include/config.h"
-    "${PROJECT_BINARY_DIR}/include/config.h"
-  )
+  set(PBC_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN time permits")
+  set(PBC_RANDOM_TESTS 10 CACHE STRING "Number of random M-PIN tests")
+  message(STATUS "PBC_TIME_PERMIT_TESTS=${PBC_TIME_PERMIT_TESTS}")
+  message(STATUS "PBC_RANDOM_TESTS=${PBC_RANDOM_TESTS}")
 endif(BUILD_MPIN OR BUILD_WCC)
 
 # Add subdirectories
@@ -193,10 +151,6 @@ if (BUILD_PYTHON)
   execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
   execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; from os.path import dirname; print dirname(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_LIB OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  if((AMCL_CHOICE STREQUAL "BN254_CX") AND BUILD_MPIN)
-    file(COPY "${PROJECT_SOURCE_DIR}/testVectors/mpin/BN254_CX.json" DESTINATION "${PROJECT_BINARY_DIR}/wrappers/python")
-    file(RENAME "${PROJECT_BINARY_DIR}/wrappers/python/BN254_CX.json" "${PROJECT_BINARY_DIR}/wrappers/python/MPINTestVectors.json")
-  endif((AMCL_CHOICE STREQUAL "BN254_CX") AND BUILD_MPIN)
   add_subdirectory (wrappers/python)
 endif (BUILD_PYTHON)
 
@@ -204,6 +158,7 @@ if (BUILD_GO)
   set(GO_PATH "$ENV{GOPATH}" CACHE STRING "GOPATH")
   message(STATUS "Build Golang: GOPATH='${GO_PATH}'")
   add_subdirectory (wrappers/go)
+  add_subdirectory (wrappers/go/examples)
 endif (BUILD_GO)
 
 # Build Documentation

@@ -33,82 +33,82 @@
 #include <string.h>
 #include "amcl.h"
 
-/**
- * Curve types
- */
-#if CURVETYPE==WEIERSTRASS
-#define CURVETYPE_DESC "WEIERSTRASS"
-#elif CURVETYPE==EDWARDS
-#define CURVETYPE_DESC "EDWARDS"
-#elif CURVETYPE==MONTGOMERY
-#define CURVETYPE_DESC "MONTGOMERY"
-#else
-#define CURVETYPE_DESC ""
-#endif
+// /**
+//  * Curve types
+//  */
+// #if CURVETYPE==WEIERSTRASS
+// #define CURVETYPE_DESC "WEIERSTRASS"
+// #elif CURVETYPE==EDWARDS
+// #define CURVETYPE_DESC "EDWARDS"
+// #elif CURVETYPE==MONTGOMERY
+// #define CURVETYPE_DESC "MONTGOMERY"
+// #else
+// #define CURVETYPE_DESC ""
+// #endif
 
-/**
- * Curve choice description
- */
-#if CHOICE==BN254
-#define CHOICE_DESC "BN254"
-#elif CHOICE==BN254_T
-#define CHOICE_DESC "BN254_T"
-#elif CHOICE==BN254_T2
-#define CHOICE_DESC "BN254_T2"
-#elif CHOICE==BN254_CX
-#define CHOICE_DESC "BN254_CX"
-#elif CHOICE==NIST256
-#define CHOICE_DESC "NIST256"
-#elif CHOICE==MF254
-#define CHOICE_DESC "MF254"
-#elif CHOICE==MF256
-#define CHOICE_DESC "MF256"
-#elif CHOICE==MS255
-#define CHOICE_DESC "MS255"
-#elif CHOICE==MS256
-#define CHOICE_DESC "MS256"
-#elif CHOICE==C25519
-#define CHOICE_DESC "C25519"
-#elif CHOICE==BRAINPOOL
-#define CHOICE_DESC "BRAINPOOL"
-#elif CHOICE==ANSSI
-#define CHOICE_DESC "ANSSI"
-#elif CHOICE==HIFIVE
-#define CHOICE_DESC "HIFIVE"
-#elif CHOICE==GOLDILOCKS
-#define CHOICE_DESC "GOLDILOCKS"
-#elif CHOICE==NIST384
-#define CHOICE_DESC "NIST384"
-#elif CHOICE==C41417
-#define CHOICE_DESC "C41417"
-#elif CHOICE==NIST521
-#define CHOICE_DESC "NIST521"
-#elif CHOICE==BN646
-#define CHOICE_DESC "BN646"
-#elif CHOICE==BN454
-#define CHOICE_DESC "BN454"
-#elif CHOICE==BLS455
-#define CHOICE_DESC "BLS455"
-#elif CHOICE==BLS383
-#define CHOICE_DESC "BLS383"
-#else
-#define CHOICE_DESC ""
-#endif
+// /**
+//  * Curve choice description
+//  */
+// #if CHOICE==BN254
+// #define CHOICE_DESC "BN254"
+// #elif CHOICE==BN254_T
+// #define CHOICE_DESC "BN254_T"
+// #elif CHOICE==BN254_T2
+// #define CHOICE_DESC "BN254_T2"
+// #elif CHOICE==BN254_CX
+// #define CHOICE_DESC "BN254_CX"
+// #elif CHOICE==NIST256
+// #define CHOICE_DESC "NIST256"
+// #elif CHOICE==MF254
+// #define CHOICE_DESC "MF254"
+// #elif CHOICE==MF256
+// #define CHOICE_DESC "MF256"
+// #elif CHOICE==MS255
+// #define CHOICE_DESC "MS255"
+// #elif CHOICE==MS256
+// #define CHOICE_DESC "MS256"
+// #elif CHOICE==C25519
+// #define CHOICE_DESC "C25519"
+// #elif CHOICE==BRAINPOOL
+// #define CHOICE_DESC "BRAINPOOL"
+// #elif CHOICE==ANSSI
+// #define CHOICE_DESC "ANSSI"
+// #elif CHOICE==HIFIVE
+// #define CHOICE_DESC "HIFIVE"
+// #elif CHOICE==GOLDILOCKS
+// #define CHOICE_DESC "GOLDILOCKS"
+// #elif CHOICE==NIST384
+// #define CHOICE_DESC "NIST384"
+// #elif CHOICE==C41417
+// #define CHOICE_DESC "C41417"
+// #elif CHOICE==NIST521
+// #define CHOICE_DESC "NIST521"
+// #elif CHOICE==BN646
+// #define CHOICE_DESC "BN646"
+// #elif CHOICE==BN454
+// #define CHOICE_DESC "BN454"
+// #elif CHOICE==BLS455
+// #define CHOICE_DESC "BLS455"
+// #elif CHOICE==BLS383
+// #define CHOICE_DESC "BLS383"
+// #else
+// #define CHOICE_DESC ""
+// #endif
 
-/**
- * Modulus type
- */
-#if MODTYPE==NOT_SPECIAL
-#define MODTYPE_DESC "NOT_SPECIAL - Modulus of no exploitable form"
-#elif MODTYPE==PSEUDO_MERSENNE
-#define MODTYPE_DESC "PSEUDO_MERSENNE - Pseudo-mersenne modulus of form $2^n-c$"
-#elif MODTYPE==GENERALISED_MERSENNE
-#define MODTYPE_DESC "GENERALISED_MERSENNE - Generalised-mersenne modulus of form $2^n-2^m-1$"
-#elif MODTYPE==MONTGOMERY_FRIENDLY
-#define MODTYPE_DESC "MONTGOMERY_FRIENDLY - Montgomery Friendly modulus of form $2^a(2^b-c)-1$"
-#else
-#define MODTYPE_DESC ""
-#endif
+// /**
+//  * Modulus type
+//  */
+// #if MODTYPE==NOT_SPECIAL
+// #define MODTYPE_DESC "NOT_SPECIAL - Modulus of no exploitable form"
+// #elif MODTYPE==PSEUDO_MERSENNE
+// #define MODTYPE_DESC "PSEUDO_MERSENNE - Pseudo-mersenne modulus of form $2^n-c$"
+// #elif MODTYPE==GENERALISED_MERSENNE
+// #define MODTYPE_DESC "GENERALISED_MERSENNE - Generalised-mersenne modulus of form $2^n-2^m-1$"
+// #elif MODTYPE==MONTGOMERY_FRIENDLY
+// #define MODTYPE_DESC "MONTGOMERY_FRIENDLY - Montgomery Friendly modulus of form $2^a(2^b-c)-1$"
+// #else
+// #define MODTYPE_DESC ""
+// #endif
 
 /**
  * @brief Print version number and information about the build
