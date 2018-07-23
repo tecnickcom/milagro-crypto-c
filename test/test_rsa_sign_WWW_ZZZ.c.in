@@ -38,8 +38,6 @@
 #include <stdlib.h>
 #include "randapi.h"
 
-typedef enum { false, true } bool;
-
 #define RSA 2
 #define H160 1
 #define H256 2

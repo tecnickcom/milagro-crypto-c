@@ -31,8 +31,6 @@
 #include "utils.h"
 #include "big_XXX.h"
 
-typedef enum { false, true } bool;
-
 int main()
 {
 

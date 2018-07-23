@@ -100,7 +100,7 @@ int main()
 
     char r[PGS_ZZZ],z[2*PFS_ZZZ+1],w[PGS_ZZZ],t[2*PFS_ZZZ+1];
 
-    char ck[MPIN_PAS],sk[MPIN_PAS];
+    char ck[AESKEY_ZZZ],sk[AESKEY_ZZZ];
     octet R= {0,sizeof(r),r};
     octet Z= {0,sizeof(z),z};
     octet W= {0,sizeof(w),w};

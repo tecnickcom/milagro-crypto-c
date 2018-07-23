@@ -90,7 +90,7 @@ int mpin(csprng *RNG)
 
     /* Create Client Identity */
     OCT_jstring(&CLIENT_ID,"testUser@miracl.com");
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,&HCID);  /* Either Client or TA calculates Hash(ID) - you decide! */
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HCID);  /* Either Client or TA calculates Hash(ID) - you decide! */
 
     printf("Client ID Hash= ");
     OCT_output(&HCID);
@@ -111,7 +111,7 @@ int mpin(csprng *RNG)
     /* Client extracts PIN from secret to create Token */
     pin=1234;
     printf("Client extracts PIN= %d\n",pin);
-    MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,pin,&TOKEN);
+    MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&CLIENT_ID,pin,&TOKEN);
     printf("Client Token= ");
     OCT_output(&TOKEN);
 
@@ -122,7 +122,7 @@ int mpin(csprng *RNG)
     /* Client extracts PIN2 generated from bio-metric from token */
     pin2=1212;
     printf("Client extracts PIN= %d\n",pin2);
-    MPIN_ZZZ_EXTRACT_FACTOR(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,pin2,14,&TOKEN);
+    MPIN_ZZZ_EXTRACT_FACTOR(HASH_TYPE_ZZZ,&CLIENT_ID,pin2,14,&TOKEN);
     printf("Client Token= ");
     OCT_output(&TOKEN);
 
@@ -130,7 +130,7 @@ int mpin(csprng *RNG)
     /* Client gets "Time Permit" from DTA */
     printf("Client gets Time Permit\n");
 
-    MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&S,&HCID,&PERMIT);
+    MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&S,&HCID,&PERMIT);
     printf("Time Permit= ");
     OCT_output(&PERMIT);
 
@@ -145,7 +145,7 @@ int mpin(csprng *RNG)
 
     /* Client adds PIN2 generated from bio-metric to token */
     printf("Client adds PIN= %d\n",pin2);
-    MPIN_ZZZ_RESTORE_FACTOR(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,pin2,14,&TOKEN);
+    MPIN_ZZZ_RESTORE_FACTOR(HASH_TYPE_ZZZ,&CLIENT_ID,pin2,14,&TOKEN);
     printf("Client Token= ");
     OCT_output(&TOKEN);
 
@@ -201,7 +201,7 @@ int mpin(csprng *RNG)
     printf("MPIN Single Pass\n");
     timeValue = GET_TIME();
 
-    rtn=MPIN_ZZZ_CLIENT(HASH_TYPE_MPIN_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT,NULL,timeValue,&Y);
+    rtn=MPIN_ZZZ_CLIENT(HASH_TYPE_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT,NULL,timeValue,&Y);
 
     if (rtn != 0)
     {
@@ -215,17 +215,17 @@ int mpin(csprng *RNG)
 
 
 
-    rtn=MPIN_ZZZ_SERVER(HASH_TYPE_MPIN_ZZZ,date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,&CLIENT_ID,NULL,timeValue,NULL);
+    rtn=MPIN_ZZZ_SERVER(HASH_TYPE_ZZZ,date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,&CLIENT_ID,NULL,timeValue,NULL);
 
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,&HSID);  // new
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HSID);  // new
     MPIN_ZZZ_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  /* Also send T=w.ID to client, remember random w  */
 #endif
 
 #else // SINGLE_MPIN_PASS
     printf("MPIN Multi Pass\n");
-    if (MPIN_ZZZ_CLIENT_1(HASH_TYPE_MPIN_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT)!=0)
+    if (MPIN_ZZZ_CLIENT_1(HASH_TYPE_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT)!=0)
     {
         printf("Error from Client side - First MPIN_PASs\n");
         return 0;
@@ -234,18 +234,18 @@ int mpin(csprng *RNG)
     /* Send U=x.ID to server, and recreate secret from token and pin */
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,&HCID);
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HCID);
     MPIN_ZZZ_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  /* Also Send Z=r.ID to Server, remember random r, DH component */
 #endif
 
     /* Server calculates H(ID) and H(ID)+H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp. */
-    MPIN_ZZZ_SERVER_1(HASH_TYPE_MPIN_ZZZ,date,&CLIENT_ID,pHID,pHTID);
+    MPIN_ZZZ_SERVER_1(HASH_TYPE_ZZZ,date,&CLIENT_ID,pHID,pHTID);
 
     /* Server generates Random number Y and sends it to Client */
     MPIN_ZZZ_RANDOM_GENERATE(RNG,&Y);
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&CLIENT_ID,&HSID); //new
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HSID); //new
     MPIN_ZZZ_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  /* Also send T=w.ID to client, remember random w, DH component  */
 #endif
 
@@ -282,13 +282,13 @@ int mpin(csprng *RNG)
     }
 
 #ifdef FULL
-    HASH_ALL(HASH_TYPE_MPIN_ZZZ,&HCID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);  // new
-    MPIN_ZZZ_CLIENT_KEY(HASH_TYPE_MPIN_ZZZ,&G1,&G2,pin,&R,&X,&H,&T,&CK);      // new H
+    HASH_ALL(HASH_TYPE_ZZZ,&HCID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);  // new
+    MPIN_ZZZ_CLIENT_KEY(HASH_TYPE_ZZZ,&G1,&G2,pin,&R,&X,&H,&T,&CK);      // new H
     printf("Client Key = ");
     OCT_output(&CK);
 
-    HASH_ALL(HASH_TYPE_MPIN_ZZZ,&HSID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);
-    MPIN_ZZZ_SERVER_KEY(HASH_TYPE_MPIN_ZZZ,&Z,&SST,&W,&H,pHID,pxID,pxCID,&SK); // new H,pHID
+    HASH_ALL(HASH_TYPE_ZZZ,&HSID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);
+    MPIN_ZZZ_SERVER_KEY(HASH_TYPE_ZZZ,&Z,&SST,&W,&H,pHID,pxID,pxCID,&SK); // new H,pHID
     printf("Server Key = ");
     OCT_output(&SK);
 #endif

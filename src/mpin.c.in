@@ -73,7 +73,7 @@ static void mpin_hash(int sha,FP4_YYY *f, ECP_ZZZ *P,octet *w)
         break;
     }
 
-    OCT_jbytes(w,h,PAS_ZZZ);
+    OCT_jbytes(w,h,AESKEY_ZZZ);
     for (i=0; i<hlen; i++) h[i]=0;
 }
 
@@ -501,11 +501,9 @@ int MPIN_ZZZ_GET_CLIENT_PERMIT(int sha,int date,octet *S,octet *CID,octet *CTT)
     mhashit(sha,date,CID,&H);
 
     ECP_ZZZ_mapit(&P,&H);
-
     BIG_XXX_fromBytes(s,S->val);
 
     PAIR_ZZZ_G1mul(&P,s);
-
     ECP_ZZZ_toOctet(CTT,&P);
     return 0;
 }
@@ -866,7 +864,7 @@ void MPIN_ZZZ_GET_Y(int sha,int TimeValue,octet *xCID,octet *Y)
 int MPIN_ZZZ_CLIENT(int sha,int date,octet *ID,csprng *RNG,octet *X,int pin,octet *TOKEN,octet *V,octet *U,octet *UT,octet *TP,octet *MESSAGE,int TimeValue,octet *Y)
 {
     int rtn=0;
-    char m[M_SIZE];
+    char m[M_SIZE_ZZZ];
     octet M= {0,sizeof(m),m};
 
     octet *pID;
@@ -898,7 +896,7 @@ int MPIN_ZZZ_CLIENT(int sha,int date,octet *ID,csprng *RNG,octet *X,int pin,octe
 int MPIN_ZZZ_SERVER(int sha,int date,octet *HID,octet *HTID,octet *Y,octet *sQ,octet *U,octet *UT,octet *V,octet *E,octet *F,octet *ID,octet *MESSAGE,int TimeValue, octet *Pa)
 {
     int rtn=0;
-    char m[M_SIZE];
+    char m[M_SIZE_ZZZ];
     octet M= {0,sizeof(m),m};
 
     octet *pU;

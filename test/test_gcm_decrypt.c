@@ -36,8 +36,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef enum { false, true } bool;
-
 #define LINE_LEN 300
 // #define DEBUG
 

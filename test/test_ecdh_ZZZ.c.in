@@ -35,8 +35,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef enum { false, true } bool;
-
 #define LINE_LEN 500
 //#define DEBUG
 
@@ -53,7 +51,7 @@ int main(int argc, char** argv)
     char * linePtr = NULL;
     int l1=0, l2=0, i=0;
 
-    char raw[256], key[EAS_ZZZ], ciphertext[EAS_ZZZ*2], res[EAS_ZZZ*2], plaintext[EAS_ZZZ*2];
+    char raw[256], key[AESKEY_ZZZ], ciphertext[AESKEY_ZZZ*2], res[AESKEY_ZZZ*2], plaintext[AESKEY_ZZZ*2];
     octet Key= {0,sizeof(key),key}, Ciphertext= {0,sizeof(ciphertext),ciphertext}, Plaintext= {0,sizeof(plaintext),plaintext}, Res= {0,sizeof(res),res};
     csprng rng;
 
@@ -292,8 +290,8 @@ int main(int argc, char** argv)
 // Self test AES-CBC
     for(i=0; i<20; i++)
     {
-        OCT_rand(&Key,&rng,EAS_ZZZ*2);
-        OCT_rand(&Plaintext,&rng,EAS_ZZZ);
+        OCT_rand(&Key,&rng,AESKEY_ZZZ*2);
+        OCT_rand(&Plaintext,&rng,AESKEY_ZZZ);
         OCT_copy(&Res,&Plaintext);
 
         AES_CBC_IV0_ENCRYPT(&Key,&Plaintext,&Ciphertext);

@@ -110,7 +110,7 @@ int main()
     CREATE_CSPRNG(&RNG,&SEED);
 
     /* Hash ID */
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&ID,&HCID);
+    HASH_ID(HASH_TYPE_ZZZ,&ID,&HCID);
     OCT_output(&HCID);
 
     /* Generate Client master secret for MIRACL and Customer */
@@ -190,13 +190,13 @@ int main()
     /* Generate Time Permit shares */
     date = today();
     printf("Date %d \n", date);
-    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS1,&HCID,&TP1);
+    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS1,&HCID,&TP1);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_GET_CLIENT_PERMIT(date,&MS1,&HCID,&TP1) Error %d\n", rtn);
         return 1;
     }
-    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS2,&HCID,&TP2);
+    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS2,&HCID,&TP2);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_GET_CLIENT_PERMIT(date,&MS2,&HCID,&TP2) Error %d\n", rtn);
@@ -218,7 +218,7 @@ int main()
     OCT_output(&TP);
 
     /* Client extracts PIN1 from secret to create Token */
-    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_MPIN_ZZZ,&ID, PIN1, &TOKEN);
+    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&ID, PIN1, &TOKEN);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_EXTRACT_PIN( &ID, PIN, &TOKEN) Error %d\n", rtn);
@@ -231,7 +231,7 @@ int main()
     /* Client  */
     TimeValue = GET_TIME();
     printf("TimeValue %d \n", TimeValue);
-    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_MPIN_ZZZ,date,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,NULL,&UT,&TP,NULL,TimeValue,&Y1);
+    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_ZZZ,date,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,NULL,&UT,&TP,NULL,TimeValue,&Y1);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_CLIENT ERROR %d\n", rtn);
@@ -243,7 +243,7 @@ int main()
     OCT_output(&SEC);
 
     /* Server  */
-    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_MPIN_ZZZ,date,&HID,&HTID,&Y2,&ServerSecret,NULL,&UT,&SEC,&E,&F,&ID,NULL,TimeValue,NULL);
+    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_ZZZ,date,&HID,&HTID,&Y2,&ServerSecret,NULL,&UT,&SEC,&E,&F,&ID,NULL,TimeValue,NULL);
 
     printf("Y2 = 0x");
     OCT_output(&Y2);

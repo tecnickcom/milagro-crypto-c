@@ -33,9 +33,9 @@ int ecdh(csprng *RNG)
     char *pp="M0ng00se";
     /* These octets are automatically protected against buffer overflow attacks */
     /* Note salt must be big enough to include an appended word */
-    /* Note ECIES ciphertext C must be big enough to include at lEAS_ZZZt 1 appended block */
+    /* Note ECIES ciphertext C must be big enough to include at least 1 appended block */
     /* Recall EFS_ZZZ is field size in bytes. So EFS_ZZZ=32 for 256-bit curve */
-    char s0[2*EGS_ZZZ],s1[EGS_ZZZ],w0[2*EFS_ZZZ+1],w1[2*EFS_ZZZ+1],z0[EFS_ZZZ],z1[EFS_ZZZ],key[EAS_ZZZ],salt[40],pw[40];
+    char s0[2*EGS_ZZZ],s1[EGS_ZZZ],w0[2*EFS_ZZZ+1],w1[2*EFS_ZZZ+1],z0[EFS_ZZZ],z1[EFS_ZZZ],key[AESKEY_ZZZ],salt[40],pw[40];
     octet S0= {0,sizeof(s0),s0};
     octet S1= {0,sizeof(s1),s1};
     octet W0= {0,sizeof(w0),w0};
@@ -56,7 +56,7 @@ int ecdh(csprng *RNG)
 
     /* private key S0 of size EGS_ZZZ bytes derived from Password and Salt */
 
-    PBKDF2(HASH_TYPE_ECC_ZZZ,&PW,&SALT,1000,EGS_ZZZ,&S0);
+    PBKDF2(HASH_TYPE_ZZZ,&PW,&SALT,1000,EGS_ZZZ,&S0);
 
     printf("Alices private key= 0x");
     OCT_output(&S0);
@@ -98,7 +98,7 @@ int ecdh(csprng *RNG)
         return 0;
     }
 
-    KDF2(HASH_TYPE_ECC_ZZZ,&Z0,NULL,EAS_ZZZ,&KEY);
+    KDF2(HASH_TYPE_ZZZ,&Z0,NULL,AESKEY_ZZZ,&KEY);
 
     printf("Alice's DH Key=  0x");
     OCT_output(&KEY);
@@ -132,7 +132,7 @@ int ecdh(csprng *RNG)
     M.len=17;
     for (i=0; i<=16; i++) M.val[i]=i;
 
-    ECP_ZZZ_ECIES_ENCRYPT(HASH_TYPE_ECC_ZZZ,&P1,&P2,RNG,&W1,&M,12,&V,&C,&T);
+    ECP_ZZZ_ECIES_ENCRYPT(HASH_TYPE_ZZZ,&P1,&P2,RNG,&W1,&M,12,&V,&C,&T);
 
     printf("Ciphertext= \n");
     printf("V= 0x");
@@ -142,7 +142,7 @@ int ecdh(csprng *RNG)
     printf("T= 0x");
     OCT_output(&T);
 
-    if (!ECP_ZZZ_ECIES_DECRYPT(HASH_TYPE_ECC_ZZZ,&P1,&P2,&V,&C,&T,&S1,&M))
+    if (!ECP_ZZZ_ECIES_DECRYPT(HASH_TYPE_ZZZ,&P1,&P2,&V,&C,&T,&S1,&M))
     {
         printf("*** ECIES Decryption Failed\n");
         return 0;
@@ -155,7 +155,7 @@ int ecdh(csprng *RNG)
 
     printf("Testing ECDSA\n");
 
-    if (ECP_ZZZ_SP_DSA(HASH_TYPE_ECC_ZZZ,RNG,NULL,&S0,&M,&CS,&DS)!=0)
+    if (ECP_ZZZ_SP_DSA(HASH_TYPE_ZZZ,RNG,NULL,&S0,&M,&CS,&DS)!=0)
     {
         printf("***ECDSA Signature Failed\n");
         return 0;
@@ -166,7 +166,7 @@ int ecdh(csprng *RNG)
     printf("Signature D = 0x");
     OCT_output(&DS);
 
-    if (ECP_ZZZ_VP_DSA(HASH_TYPE_ECC_ZZZ,&W0,&M,&CS,&DS)!=0)
+    if (ECP_ZZZ_VP_DSA(HASH_TYPE_ZZZ,&W0,&M,&CS,&DS)!=0)
     {
         printf("***ECDSA Verification Failed\n");
         return 0;
