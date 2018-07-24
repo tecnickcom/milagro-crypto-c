@@ -56,7 +56,7 @@ int main()
     BIG_XXX_rcopy(x,CURVE_Gx_ZZZ);
     BIG_XXX_rcopy(y,CURVE_Gy_ZZZ);
     ECP_ZZZ_set(&G,x,y);
-    if (G.inf)
+    if (ECP_ZZZ_isinf(&G))
     {
         printf("Failed to set - point not on curve\n");
         return 1;
@@ -68,7 +68,7 @@ int main()
     FP_YYY_rcopy(&(wy.a),CURVE_Pya_ZZZ);
     FP_YYY_rcopy(&(wy.b),CURVE_Pyb_ZZZ);
     ECP2_ZZZ_set(&W,&wx,&wy);
-    if (W.inf)
+    if (ECP2_ZZZ_isinf(&W))
     {
         printf("Failed to set - point not on curve\n");
         return 1;

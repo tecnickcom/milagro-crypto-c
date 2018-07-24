@@ -266,6 +266,7 @@ int main(int argc, char** argv)
             BIG_XXX_zero(supp);
             BIG_XXX_copy(supp,BIG1);
             BIG_XXX_modneg(supp,supp,BIG2);
+            BIG_XXX_mod(supp,BIG2); // Account for case BIG1 = BIG2
             len = strlen(BIG1modneg2line);
             linePtr = line + len;
             read_BIG_XXX(BIG1modneg2,linePtr);

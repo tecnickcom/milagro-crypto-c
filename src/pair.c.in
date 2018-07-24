@@ -136,7 +136,7 @@ static void PAIR_ZZZ_line(FP12_YYY *v,ECP2_ZZZ *A,ECP2_ZZZ *B,FP_YYY *Qx,FP_YYY 
 /* Optimal R-ate pairing r=e(P,Q) */
 void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q)
 {
-    FP2_YYY X;
+
     BIG_XXX x,n,n3;
     FP_YYY Qx,Qy;
     int i,nb,bt;
@@ -144,7 +144,7 @@ void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q)
     FP12_YYY lv;
 #if PAIRING_FRIENDLY_ZZZ==BN
     ECP2_ZZZ KA;
-#endif
+    FP2_YYY X;
 
     FP_YYY_rcopy(&Qx,Fra_YYY);
     FP_YYY_rcopy(&Qy,Frb_YYY);
@@ -153,6 +153,7 @@ void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q)
 #if SEXTIC_TWIST_ZZZ==M_TYPE
     FP2_YYY_inv(&X,&X);
     FP2_YYY_norm(&X);
+#endif
 #endif
 
     BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
@@ -201,13 +202,16 @@ void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q)
         }
     }
 
+#if SIGN_OF_X_ZZZ==NEGATIVEX
+    FP12_YYY_conj(r,r);
+#endif
+
     /* R-ate fixup required for BN curves */
 #if PAIRING_FRIENDLY_ZZZ==BN
     ECP2_ZZZ_copy(&KA,P);
     ECP2_ZZZ_frob(&KA,&X);
 #if SIGN_OF_X_ZZZ==NEGATIVEX
     ECP2_ZZZ_neg(&A);
-    FP12_YYY_conj(r,r);
 #endif
     PAIR_ZZZ_line(&lv,&A,&KA,&Qx,&Qy);
     FP12_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
@@ -221,15 +225,15 @@ void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q)
 /* Optimal R-ate double pairing e(P,Q).e(R,S) */
 void PAIR_ZZZ_double_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q,ECP2_ZZZ *R,ECP_ZZZ *S)
 {
-    FP2_YYY X;
     BIG_XXX x,n,n3;
     FP_YYY Qx,Qy,Sx,Sy;
     int i,nb,bt;
     ECP2_ZZZ A,B;
     FP12_YYY lv;
 #if PAIRING_FRIENDLY_ZZZ==BN
+    FP2_YYY X;
     ECP2_ZZZ K;
-#endif
+
     FP_YYY_rcopy(&Qx,Fra_YYY);
     FP_YYY_rcopy(&Qy,Frb_YYY);
     FP2_YYY_from_FPs(&X,&Qx,&Qy);
@@ -237,6 +241,7 @@ void PAIR_ZZZ_double_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q,ECP2_ZZZ *R,ECP_ZZZ 
 #if SEXTIC_TWIST_ZZZ==M_TYPE
     FP2_YYY_inv(&X,&X);
     FP2_YYY_norm(&X);
+#endif
 #endif
 
     BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
@@ -302,10 +307,14 @@ void PAIR_ZZZ_double_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q,ECP2_ZZZ *R,ECP_ZZZ 
     }
 
     /* R-ate fixup required for BN curves */
-#if PAIRING_FRIENDLY_ZZZ==BN
 
 #if SIGN_OF_X_ZZZ==NEGATIVEX
     FP12_YYY_conj(r,r);
+#endif
+
+#if PAIRING_FRIENDLY_ZZZ==BN
+
+#if SIGN_OF_X_ZZZ==NEGATIVEX
     ECP2_ZZZ_neg(&A);
     ECP2_ZZZ_neg(&B);
 #endif
@@ -329,6 +338,7 @@ void PAIR_ZZZ_double_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q,ECP2_ZZZ *R,ECP_ZZZ 
     ECP2_ZZZ_neg(&K);
     PAIR_ZZZ_line(&lv,&B,&K,&Sx,&Sy);
     FP12_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
+
 #endif
 }
 
@@ -413,7 +423,6 @@ void PAIR_ZZZ_fexp(FP12_YYY *r)
     FP12_YYY_reduce(r);
 #else
     // Ghamman & Fouotsa Method
-
     FP12_YYY_usqr(&y0,r);
     FP12_YYY_pow(&y1,&y0,x);
 #if SIGN_OF_X_ZZZ==NEGATIVEX
@@ -503,7 +512,7 @@ static void glv(BIG_XXX u[2],BIG_XXX e)
 
     BIG_XXX x,x2,q;
     BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
-    BIG_XXX_mul(x2,x,x);
+    BIG_XXX_smul(x2,x,x);
     BIG_XXX_copy(u[0],e);
     BIG_XXX_mod(u[0],x2);
     BIG_XXX_copy(u[1],e);
@@ -610,6 +619,8 @@ void PAIR_ZZZ_G1mul(ECP_ZZZ *P,BIG_XXX e)
         BIG_XXX_copy(u[1],t);
         ECP_ZZZ_neg(&Q);
     }
+    BIG_XXX_norm(u[0]);
+    BIG_XXX_norm(u[1]);
     ECP_ZZZ_mul2(P,&Q,u[0],u[1]);
 
 #else
@@ -641,7 +652,6 @@ void PAIR_ZZZ_G2mul(ECP2_ZZZ *P,BIG_XXX e)
 
 
     ECP2_ZZZ_affine(P);
-
     ECP2_ZZZ_copy(&Q[0],P);
     for (i=1; i<4; i++)
     {
@@ -658,6 +668,7 @@ void PAIR_ZZZ_G2mul(ECP2_ZZZ *P,BIG_XXX e)
             BIG_XXX_copy(u[i],x);
             ECP2_ZZZ_neg(&Q[i]);
         }
+        BIG_XXX_norm(u[i]);
     }
 
     ECP2_ZZZ_mul4(P,Q,u);
@@ -702,6 +713,7 @@ void PAIR_ZZZ_GTpow(FP12_YYY *f,BIG_XXX e)
             BIG_XXX_copy(u[i],t);
             FP12_YYY_conj(&g[i],&g[i]);
         }
+        BIG_XXX_norm(u[i]);
     }
     FP12_YYY_pow4(f,g,u);
 
@@ -762,7 +774,6 @@ int main()
     FP12_YYY g,gp;
     FP4_YYY t,c,cp,cpm1,cpm2;
     FP2_YYY x,y,X;
-
 
     BIG_XXX_rcopy(a,CURVE_Fra);
     BIG_XXX_rcopy(b,CURVE_Frb);

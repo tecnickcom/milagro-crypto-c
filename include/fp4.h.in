@@ -28,6 +28,7 @@
 #define FP4_YYY_H
 
 #include "fp2_YYY.h"
+#include "config_curve_ZZZ.h"
 
 /**
 	@brief FP4 Structure - towered over two FP2
@@ -147,6 +148,15 @@ extern void FP4_YYY_sub(FP4_YYY *x,FP4_YYY *y,FP4_YYY *z);
 	@param a FP2 multiplier
  */
 extern void FP4_YYY_pmul(FP4_YYY *x,FP4_YYY *y,FP2_YYY *a);
+
+/**	@brief Multiplication of an FP4 by an FP
+ *
+	@param x FP4 instance, on exit = y*a
+	@param y FP4 instance
+	@param a FP multiplier
+ */
+extern void FP4_YYY_qmul(FP4_YYY *x,FP4_YYY *y,FP_YYY *a);
+
 /**	@brief Multiplication of an FP4 by a small integer
  *
 	@param x FP4 instance, on exit = y*i
@@ -248,7 +258,13 @@ extern void FP4_YYY_xtr_pow(FP4_YYY *r,FP4_YYY *x,BIG_XXX b);
  */
 extern void FP4_YYY_xtr_pow2(FP4_YYY *r,FP4_YYY *c,FP4_YYY *d,FP4_YYY *e,FP4_YYY *f,BIG_XXX a,BIG_XXX b);
 
-
+/**	@brief Conditional copy of FP4 number
+ *
+	Conditionally copies second parameter to the first (without branching)
+	@param x FP4 instance, set to y if s!=0
+	@param y another FP4 instance
+	@param s copy only takes place if not equal to 0
+ */
+extern void FP4_YYY_cmove(FP4_YYY *x,FP4_YYY *y,int s);
 
 #endif
-
