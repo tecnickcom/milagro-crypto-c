@@ -308,8 +308,10 @@ int main(int argc, char** argv)
     ECP_ZZZ ecpinf;
     const char* ECPline = "ECP = ";
     const char* ECPxyzline = "ECPxyz = ";
+    const char* ECPrawline = "ECPraw = ";
     const char* ECPinfline = "ECPinf = ";
     const char* ECPinfxyzline = "ECPinfxyz = ";
+    const char* ECPinfrawline = "ECPinfraw = ";
 // #if (CHOICE >= BN_CURVES)
     ECP2_ZZZ ecp2;
     ECP2_ZZZ ecp2inf;
@@ -427,6 +429,8 @@ int main(int argc, char** argv)
             ECP_ZZZ_output(&ecp);
             printf("%s",ECPxyzline);
             ECP_ZZZ_outputxyz(&ecp);
+            printf("%s",ECPrawline);
+            ECP_ZZZ_rawoutput(&ecp);
             FP_YYY_redc(bigaux1,&ecp.x);
             FP_YYY_redc(bigaux2,&ecp.y);
             BIG_XXX_inc(bigaux1,100);
@@ -435,6 +439,8 @@ int main(int argc, char** argv)
             ECP_ZZZ_output(&ecpinf);
             printf("%s",ECPinfxyzline);
             ECP_ZZZ_outputxyz(&ecpinf);
+            printf("%s",ECPinfrawline);
+            ECP_ZZZ_rawoutput(&ecpinf);
             done = 1;
         }
         if (!strncmp(line,  ECP2line, strlen(ECP2line)))
@@ -475,8 +481,10 @@ int main(int argc, char** argv)
         if (!strncmp(line, BIGrawline, strlen(BIGrawline))||
                 !strncmp(line, FPrawline, strlen(FPrawline))||
                 !strncmp(line, ECPxyzline, strlen(ECPxyzline))||
+                !strncmp(line, ECPrawline, strlen(ECPrawline))||
                 !strncmp(line, ECPinfline, strlen(ECPinfline))||
                 !strncmp(line, ECPinfxyzline, strlen(ECPinfxyzline))||
+                !strncmp(line, ECPinfrawline, strlen(ECPinfrawline))||
                 !strncmp(line, FP2rawline, strlen(FP2rawline))||
                 !strncmp(line, FP4rawline, strlen(FP4rawline))||
                 !strncmp(line, ECP2xyzline, strlen(ECP2xyzline))||
