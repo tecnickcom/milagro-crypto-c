@@ -369,7 +369,7 @@ class TestMPIN(unittest.TestCase):
             key, iv, header, plaintext1)
 
         new = list(ciphertext)
-        new[0] = "a"
+        new[0] = "a" if (new[0] != "a") else "b"
         ciphertext_bad = ''.join(new)
 
         plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(
@@ -397,7 +397,7 @@ class TestMPIN(unittest.TestCase):
             key, iv, header, plaintext1)
 
         new = list(header)
-        new[0] = "a"
+        new[0] = "a" if (new[0] != "a") else "b"
         header_bad = ''.join(new)
 
         plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(
