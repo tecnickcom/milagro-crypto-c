@@ -24,16 +24,13 @@ under the License.
 
 int ECP2_ZZZ_isinf(ECP2_ZZZ *P)
 {
-    if (P->inf) return 1;
-    P->inf=FP2_YYY_iszilch(&(P->x)) & FP2_YYY_iszilch(&(P->z));
-    return P->inf;
+    return (FP2_YYY_iszilch(&(P->x)) & FP2_YYY_iszilch(&(P->z)));
 }
 
 /* Set P=Q */
 /* SU= 16 */
 void ECP2_ZZZ_copy(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 {
-    P->inf=Q->inf;
     FP2_YYY_copy(&(P->x),&(Q->x));
     FP2_YYY_copy(&(P->y),&(Q->y));
     FP2_YYY_copy(&(P->z),&(Q->z));
@@ -43,7 +40,6 @@ void ECP2_ZZZ_copy(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 /* SU= 8 */
 void ECP2_ZZZ_inf(ECP2_ZZZ *P)
 {
-    P->inf=1;
     FP2_YYY_zero(&(P->x));
     FP2_YYY_one(&(P->y));
     FP2_YYY_zero(&(P->z));
@@ -55,8 +51,6 @@ static void ECP2_ZZZ_cmove(ECP2_ZZZ *P,ECP2_ZZZ *Q,int d)
     FP2_YYY_cmove(&(P->x),&(Q->x),d);
     FP2_YYY_cmove(&(P->y),&(Q->y),d);
     FP2_YYY_cmove(&(P->z),&(Q->z),d);
-    d=~(d-1);
-    P->inf^=(P->inf^Q->inf)&d;
 }
 
 /* return 1 if b==c, no branching */
@@ -95,8 +89,6 @@ static void ECP2_ZZZ_select(ECP2_ZZZ *P,ECP2_ZZZ W[],sign32 b)
 int ECP2_ZZZ_equals(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 {
     FP2_YYY a,b;
-    if (ECP2_ZZZ_isinf(P) && ECP2_ZZZ_isinf(Q)) return 1;
-    if (ECP2_ZZZ_isinf(P) || ECP2_ZZZ_isinf(Q)) return 0;
 
     FP2_YYY_mul(&a,&(P->x),&(Q->z));
     FP2_YYY_mul(&b,&(Q->x),&(P->z));
@@ -136,7 +128,7 @@ void ECP2_ZZZ_affine(ECP2_ZZZ *P)
 /* SU= 16 */
 int ECP2_ZZZ_get(FP2_YYY *x,FP2_YYY *y,ECP2_ZZZ *P)
 {
-    if (P->inf) return -1;
+    if (ECP2_ZZZ_isinf(P)) return -1;
     ECP2_ZZZ_affine(P);
     FP2_YYY_copy(y,&(P->y));
     FP2_YYY_copy(x,&(P->x));
@@ -148,7 +140,7 @@ int ECP2_ZZZ_get(FP2_YYY *x,FP2_YYY *y,ECP2_ZZZ *P)
 void ECP2_ZZZ_output(ECP2_ZZZ *P)
 {
     FP2_YYY x,y;
-    if (P->inf)
+    if (ECP2_ZZZ_isinf(P))
     {
         printf("Infinity\n");
         return;
@@ -165,7 +157,7 @@ void ECP2_ZZZ_output(ECP2_ZZZ *P)
 void ECP2_ZZZ_outputxyz(ECP2_ZZZ *P)
 {
     ECP2_ZZZ Q;
-    if (P->inf)
+    if (ECP2_ZZZ_isinf(P))
     {
         printf("Infinity\n");
         return;
@@ -265,11 +257,10 @@ int ECP2_ZZZ_set(ECP2_ZZZ *P,FP2_YYY *x,FP2_YYY *y)
 
     if (!FP2_YYY_equals(&y2,&rhs))
     {
-        P->inf=1;
+        ECP2_ZZZ_inf(P);
         return 0;
     }
 
-    P->inf=0;
     FP2_YYY_copy(&(P->x),x);
     FP2_YYY_copy(&(P->y),y);
 
@@ -286,11 +277,10 @@ int ECP2_ZZZ_setx(ECP2_ZZZ *P,FP2_YYY *x)
 
     if (!FP2_YYY_sqrt(&y,&y))
     {
-        P->inf=1;
+        ECP2_ZZZ_inf(P);
         return 0;
     }
 
-    P->inf=0;
     FP2_YYY_copy(&(P->x),x);
     FP2_YYY_copy(&(P->y),&y);
     FP2_YYY_one(&(P->z));
@@ -301,7 +291,6 @@ int ECP2_ZZZ_setx(ECP2_ZZZ *P,FP2_YYY *x)
 /* SU= 8 */
 void ECP2_ZZZ_neg(ECP2_ZZZ *P)
 {
-//	if (ECP2_ZZZ_isinf(P)) return;
     FP2_YYY_norm(&(P->y));
     FP2_YYY_neg(&(P->y),&(P->y));
     FP2_YYY_norm(&(P->y));
@@ -313,7 +302,6 @@ void ECP2_ZZZ_neg(ECP2_ZZZ *P)
 int ECP2_ZZZ_dbl(ECP2_ZZZ *P)
 {
     FP2_YYY t0,t1,t2,iy,x3,y3;
-    if (P->inf) return -1;
 
     FP2_YYY_copy(&iy,&(P->y));		//FP2 iy=new FP2(y);
 #if SEXTIC_TWIST_ZZZ==D_TYPE
@@ -369,12 +357,6 @@ int ECP2_ZZZ_add(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 {
     FP2_YYY t0,t1,t2,t3,t4,x3,y3,z3;
     int b3=3*CURVE_B_I_ZZZ;
-    if (Q->inf) return 0;
-    if (P->inf)
-    {
-        ECP2_ZZZ_copy(P,Q);
-        return 0;
-    }
 
     FP2_YYY_mul(&t0,&(P->x),&(Q->x));	//t0.mul(Q.x);         // x.Q.x
     FP2_YYY_mul(&t1,&(P->y),&(Q->y));	//t1.mul(Q.y);		 // y.Q.y
@@ -533,7 +515,7 @@ void ECP2_ZZZ_mul(ECP2_ZZZ *P,BIG_XXX e)
 void ECP2_ZZZ_frob(ECP2_ZZZ *P,FP2_YYY *X)
 {
     FP2_YYY X2;
-    if (P->inf) return;
+
     FP2_YYY_sqr(&X2,X);
     FP2_YYY_conj(&(P->x),&(P->x));
     FP2_YYY_conj(&(P->y),&(P->y));
@@ -545,12 +527,18 @@ void ECP2_ZZZ_frob(ECP2_ZZZ *P,FP2_YYY *X)
     FP2_YYY_mul(&(P->y),X,&(P->y));
 }
 
+
+// Bos & Costello https://eprint.iacr.org/2013/458.pdf
+// Faz-Hernandez & Longa & Sanchez  https://eprint.iacr.org/2013/158.pdf
+// Side channel attack secure
+
 void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
 {
-    int i,j,a[4],nb;
-    ECP2_ZZZ W[8],T,C;
-    BIG_XXX mt,t[4];
+    int i,j,k,nb,pb,bt;
+    ECP2_ZZZ T[8],W;
+    BIG_XXX t[4],mt;
     sign8 w[NLEN_XXX*BASEBITS_XXX+1];
+    sign8 s[NLEN_XXX*BASEBITS_XXX+1];
 
     for (i=0; i<4; i++)
     {
@@ -558,76 +546,77 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
         ECP2_ZZZ_affine(&Q[i]);
     }
 
-    /* precompute table */
+    // Precomputed table
+    ECP2_ZZZ_copy(&T[0],&Q[0]); // Q[0]
+    ECP2_ZZZ_copy(&T[1],&T[0]);
+    ECP2_ZZZ_add(&T[1],&Q[1]);	// Q[0]+Q[1]
+    ECP2_ZZZ_copy(&T[2],&T[0]);
+    ECP2_ZZZ_add(&T[2],&Q[2]);	// Q[0]+Q[2]
+    ECP2_ZZZ_copy(&T[3],&T[1]);
+    ECP2_ZZZ_add(&T[3],&Q[2]);	// Q[0]+Q[1]+Q[2]
+    ECP2_ZZZ_copy(&T[4],&T[0]);
+    ECP2_ZZZ_add(&T[4],&Q[3]);  // Q[0]+Q[3]
+    ECP2_ZZZ_copy(&T[5],&T[1]);
+    ECP2_ZZZ_add(&T[5],&Q[3]);	// Q[0]+Q[1]+Q[3]
+    ECP2_ZZZ_copy(&T[6],&T[2]);
+    ECP2_ZZZ_add(&T[6],&Q[3]);	// Q[0]+Q[2]+Q[3]
+    ECP2_ZZZ_copy(&T[7],&T[3]);
+    ECP2_ZZZ_add(&T[7],&Q[3]);	// Q[0]+Q[1]+Q[2]+Q[3]
 
-    ECP2_ZZZ_copy(&W[0],&Q[0]);
-    ECP2_ZZZ_sub(&W[0],&Q[1]);  /* P-Q */
-    ECP2_ZZZ_copy(&W[1],&W[0]);
-    ECP2_ZZZ_copy(&W[2],&W[0]);
-    ECP2_ZZZ_copy(&W[3],&W[0]);
-    ECP2_ZZZ_copy(&W[4],&Q[0]);
-    ECP2_ZZZ_add(&W[4],&Q[1]);  /* P+Q */
-    ECP2_ZZZ_copy(&W[5],&W[4]);
-    ECP2_ZZZ_copy(&W[6],&W[4]);
-    ECP2_ZZZ_copy(&W[7],&W[4]);
+    // Make it odd
+    pb=1-BIG_XXX_parity(t[0]);
+    BIG_XXX_inc(t[0],pb);
+    BIG_XXX_norm(t[0]);
 
-    ECP2_ZZZ_copy(&T,&Q[2]);
-    ECP2_ZZZ_sub(&T,&Q[3]);       /* R-S */
-    ECP2_ZZZ_sub(&W[1],&T);
-    ECP2_ZZZ_add(&W[2],&T);
-    ECP2_ZZZ_sub(&W[5],&T);
-    ECP2_ZZZ_add(&W[6],&T);
-    ECP2_ZZZ_copy(&T,&Q[2]);
-    ECP2_ZZZ_add(&T,&Q[3]);      /* R+S */
-    ECP2_ZZZ_sub(&W[0],&T);
-    ECP2_ZZZ_add(&W[3],&T);
-    ECP2_ZZZ_sub(&W[4],&T);
-    ECP2_ZZZ_add(&W[7],&T);
-
-    /* if multiplier is even add 1 to multiplier, and add P to correction */
-    ECP2_ZZZ_inf(&C);
-
+    // Number of bits
     BIG_XXX_zero(mt);
     for (i=0; i<4; i++)
     {
-        if (BIG_XXX_parity(t[i])==0)
-        {
-            BIG_XXX_inc(t[i],1);
-            BIG_XXX_norm(t[i]);
-            ECP2_ZZZ_add(&C,&Q[i]);
-        }
-        BIG_XXX_add(mt,mt,t[i]);
-        BIG_XXX_norm(mt);
+        BIG_XXX_or(mt,mt,t[i]);
     }
-
     nb=1+BIG_XXX_nbits(mt);
 
-    /* convert exponent to signed 1-bit window */
-    for (j=0; j<nb; j++)
+    // Sign pivot
+    s[nb-1]=1;
+    for (i=0; i<nb-1; i++)
     {
-        for (i=0; i<4; i++)
-        {
-            a[i]=BIG_XXX_lastbits(t[i],2)-2;
-            BIG_XXX_dec(t[i],a[i]);
-            BIG_XXX_norm(t[i]);
-            BIG_XXX_fshr(t[i],1);
-        }
-        w[j]=8*a[0]+4*a[1]+2*a[2]+a[3];
+        BIG_XXX_fshr(t[0],1);
+        s[i]=2*BIG_XXX_parity(t[0])-1;
     }
-    w[nb]=8*BIG_XXX_lastbits(t[0],2)+4*BIG_XXX_lastbits(t[1],2)+2*BIG_XXX_lastbits(t[2],2)+BIG_XXX_lastbits(t[3],2);
 
-    ECP2_ZZZ_copy(P,&W[(w[nb]-1)/2]);
-    for (i=nb-1; i>=0; i--)
+    // Recoded exponent
+    for (i=0; i<nb; i++)
     {
-        ECP2_ZZZ_select(&T,W,w[i]);
-        ECP2_ZZZ_dbl(P);
-        ECP2_ZZZ_add(P,&T);
+        w[i]=0;
+        k=1;
+        for (j=1; j<4; j++)
+        {
+            bt=s[i]*BIG_XXX_parity(t[j]);
+            BIG_XXX_fshr(t[j],1);
+
+            BIG_XXX_dec(t[j],(bt>>1));
+            BIG_XXX_norm(t[j]);
+            w[i]+=bt*k;
+            k*=2;
+        }
     }
-    ECP2_ZZZ_sub(P,&C); /* apply correction */
+
+    // Main loop
+    ECP2_ZZZ_select(P,T,2*w[nb-1]+1);
+    for (i=nb-2; i>=0; i--)
+    {
+        ECP2_ZZZ_select(&W,T,2*w[i]+s[i]);
+        ECP2_ZZZ_dbl(P);
+        ECP2_ZZZ_add(P,&W);
+    }
+
+    // apply correction
+    ECP2_ZZZ_copy(&W,P);
+    ECP2_ZZZ_sub(&W,&Q[0]);
+    ECP2_ZZZ_cmove(P,&W,pb);
 
     ECP2_ZZZ_affine(P);
 }
-
 
 /* Map to hash value to point on G2 from random BIG */
 void ECP2_ZZZ_mapit(ECP2_ZZZ *Q,octet *W)
@@ -717,6 +706,17 @@ void ECP2_ZZZ_mapit(ECP2_ZZZ *Q,octet *W)
     ECP2_ZZZ_affine(Q);
 
 #endif
+}
+
+void ECP2_ZZZ_generator(ECP2_ZZZ *G)
+{
+    FP2_YYY wx,wy;
+
+    FP_YYY_rcopy(&(wx.a),CURVE_Pxa_ZZZ);
+    FP_YYY_rcopy(&(wx.b),CURVE_Pxb_ZZZ);
+    FP_YYY_rcopy(&(wy.a),CURVE_Pya_ZZZ);
+    FP_YYY_rcopy(&(wy.b),CURVE_Pyb_ZZZ);
+    ECP2_ZZZ_set(G,&wx,&wy);
 }
 
 /*

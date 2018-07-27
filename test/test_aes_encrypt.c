@@ -1,3 +1,4 @@
+
 /**
  * @file test_aes_encrypt.c
  * @author Kealan McCusker
@@ -35,8 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-typedef enum { false, true } bool;
 
 #define LINE_LEN 500
 //#define DEBUG

@@ -97,7 +97,7 @@ int main()
     octet F= {0,sizeof(f),f};
 
     char r[PGS_ZZZ],z[2*PFS_ZZZ+1],w[PGS_ZZZ],t[2*PFS_ZZZ+1];
-    char ck[MPIN_PAS],sk[MPIN_PAS];
+    char ck[AESKEY_ZZZ],sk[AESKEY_ZZZ];
     octet R= {0,sizeof(r),r};
     octet Z= {0,sizeof(z),z};
     octet W= {0,sizeof(w),w};
@@ -128,7 +128,7 @@ int main()
     CREATE_CSPRNG(&RNG,&SEED);
 
     /* Hash ID */
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&ID,&HCID);
+    HASH_ID(HASH_TYPE_ZZZ,&ID,&HCID);
     OCT_output(&HCID);
 
     /* Generate Client master secret for MIRACL and Customer */
@@ -208,16 +208,16 @@ int main()
     /* Generate Time Permit shares */
     date = today();
     printf("Date %d \n", date);
-    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS1,&HCID,&TP1);
+    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS1,&HCID,&TP1);
     if (rtn != 0)
     {
-        printf("MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS1,&HCID,&TP1) Error %d\n", rtn);
+        printf("MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS1,&HCID,&TP1) Error %d\n", rtn);
         return 1;
     }
-    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS2,&HCID,&TP2);
+    rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS2,&HCID,&TP2);
     if (rtn != 0)
     {
-        printf("MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_ZZZ,date,&MS2,&HCID,&TP2) Error %d\n", rtn);
+        printf("MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,date,&MS2,&HCID,&TP2) Error %d\n", rtn);
         return 1;
     }
     printf("TP1 = 0x");
@@ -244,7 +244,7 @@ int main()
     OCT_output(&TP);
 
     /* Client extracts PIN1 from secret to create Token */
-    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_MPIN_ZZZ,&ID, PIN1, &TOKEN);
+    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&ID, PIN1, &TOKEN);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_EXTRACT_PIN( &ID, PIN, &TOKEN) Error %d\n", rtn);
@@ -259,7 +259,7 @@ int main()
     /* Client  */
     TimeValue = GET_TIME();
     printf("TimeValue %d \n", TimeValue);
-    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_MPIN_ZZZ,date,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,NULL,&UT,&TP,NULL,TimeValue,&Y1);
+    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_ZZZ,date,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,NULL,&UT,&TP,NULL,TimeValue,&Y1);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_CLIENT ERROR %d\n", rtn);
@@ -274,7 +274,7 @@ int main()
     MPIN_ZZZ_GET_G1_MULTIPLE(&RNG,1,&R,&HCID,&Z);
 
     /* Server  */
-    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_MPIN_ZZZ,date,&HID,&HTID,&Y2,&ServerSecret,NULL,&UT,&SEC,&E,&F,&ID,NULL,TimeValue,NULL);
+    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_ZZZ,date,&HID,&HTID,&Y2,&ServerSecret,NULL,&UT,&SEC,&E,&F,&ID,NULL,TimeValue,NULL);
 
     printf("Y2 = 0x");
     OCT_output(&Y2);
@@ -293,13 +293,13 @@ int main()
     printf("T = 0x");
     OCT_output(&T);
 
-    HASH_ALL(HASH_TYPE_MPIN_ZZZ,&HCID,NULL,&UT,&SEC,&Y1,&Z,&T,&HM);
-    MPIN_ZZZ_CLIENT_KEY(HASH_TYPE_MPIN_ZZZ,&G1,&G2,PIN2,&R,&X,&HM,&T,&CK);
+    HASH_ALL(HASH_TYPE_ZZZ,&HCID,NULL,&UT,&SEC,&Y1,&Z,&T,&HM);
+    MPIN_ZZZ_CLIENT_KEY(HASH_TYPE_ZZZ,&G1,&G2,PIN2,&R,&X,&HM,&T,&CK);
     printf("Client Key = ");
     OCT_output(&CK);
 
-    HASH_ALL(HASH_TYPE_MPIN_ZZZ,&HCID,NULL,&UT,&SEC,&Y2,&Z,&T,&HM);
-    MPIN_ZZZ_SERVER_KEY(HASH_TYPE_MPIN_ZZZ,&Z,&ServerSecret,&W,&HM,&HID,NULL,&UT,&SK);
+    HASH_ALL(HASH_TYPE_ZZZ,&HCID,NULL,&UT,&SEC,&Y2,&Z,&T,&HM);
+    MPIN_ZZZ_SERVER_KEY(HASH_TYPE_ZZZ,&Z,&ServerSecret,&W,&HM,&HID,NULL,&UT,&SK);
     printf("Server Key = ");
     OCT_output(&SK);
 

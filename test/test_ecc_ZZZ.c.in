@@ -41,13 +41,12 @@ int main()
     char pp[]="M0ng00se";
     /* These octets are automatically protected against buffer overflow attacks */
     /* Note salt must be big enough to include an appended word */
-    /* Note ECIES ciphertext C must be big enough to include at lEAS_ZZZt 1 appended block */
+    /* Note ECIES ciphertext C must be big enough to include at least 1 appended block */
     /* Recall EFS_ZZZ is field size in bytes. So EFS_ZZZ=32 for 256-bit curve */
-    char s0[EGS_ZZZ],s1[EGS_ZZZ],w0[2*EFS_ZZZ+1],w1[2*EFS_ZZZ+1],z0[EFS_ZZZ],z1[EFS_ZZZ],raw[100],key[EAS_ZZZ],salt[32],pw[20];
+    char s0[EGS_ZZZ],s1[EGS_ZZZ],w0[2*EFS_ZZZ+1],w1[2*EFS_ZZZ+1],z0[EFS_ZZZ],z1[EFS_ZZZ],raw[100],key[AESKEY_ZZZ],salt[32],pw[20];
 #if CURVETYPE_ZZZ != MONTGOMERY
     char ds[EGS_ZZZ],p1[32],p2[32],v[2*EFS_ZZZ+1],m[32],plm[32],c[64],t[32],cs[EGS_ZZZ];
 #endif
-    int HASH_TYPE_ECC = SHA256;
 
     octet S0= {0,sizeof(s0),s0};
     octet S1= {0,sizeof(s1),s1};
@@ -98,7 +97,7 @@ int main()
         OCT_jstring(&PW,pp);   // set Password from string
 
 // Derive private key S0 of size EGS_ZZZ bytes from Password and Salt
-        PBKDF2(HASH_TYPE_ECC,&PW,&SALT,1000,EGS_ZZZ,&S0);
+        PBKDF2(HASH_TYPE_ZZZ,&PW,&SALT,1000,EGS_ZZZ,&S0);
 #ifdef DEBUG
         printf("Alices private key= 0x");
         OCT_output(&S0);
@@ -141,7 +140,7 @@ int main()
             exit(1);
         }
 
-        KDF2(HASH_TYPE_ECC,&Z0,NULL,EAS_ZZZ,&KEY);
+        KDF2(HASH_TYPE_ZZZ,&Z0,NULL,AESKEY_ZZZ,&KEY);
 #ifdef DEBUG
         printf("Alice's DH Key=  0x");
         OCT_output(&KEY);
@@ -159,7 +158,7 @@ int main()
         OCT_rand(&M,&RNG,M.len);
 
 // ECIES ecncryption
-        ECP_ZZZ_ECIES_ENCRYPT(HASH_TYPE_ECC,&P1,&P2,&RNG,&W1,&M,12,&V,&C,&T);
+        ECP_ZZZ_ECIES_ENCRYPT(HASH_TYPE_ZZZ,&P1,&P2,&RNG,&W1,&M,12,&V,&C,&T);
 #ifdef DEBUG
         printf("Ciphertext= \n");
         printf("V= 0x");
@@ -172,7 +171,7 @@ int main()
         OCT_copy(&PlM,&M);
 
 // ECIES decryption
-        if (!ECP_ZZZ_ECIES_DECRYPT(HASH_TYPE_ECC,&P1,&P2,&V,&C,&T,&S1,&M))
+        if (!ECP_ZZZ_ECIES_DECRYPT(HASH_TYPE_ZZZ,&P1,&P2,&V,&C,&T,&S1,&M))
         {
             printf("ECIES Decryption Failed\n");
             exit(1);
@@ -198,7 +197,7 @@ int main()
 #endif
 
 // Sign with ECDSA
-        if (ECP_ZZZ_SP_DSA(HASH_TYPE_ECC,&RNG,NULL,&S0,&M,&CS,&DS)!=0)
+        if (ECP_ZZZ_SP_DSA(HASH_TYPE_ZZZ,&RNG,NULL,&S0,&M,&CS,&DS)!=0)
         {
             printf("ECDSA Signature Failed\n");
             exit(1);
@@ -211,7 +210,7 @@ int main()
 #endif
 
 // Verify ECDSA signature
-        if (ECP_ZZZ_VP_DSA(HASH_TYPE_ECC,&W0,&M,&CS,&DS)!=0)
+        if (ECP_ZZZ_VP_DSA(HASH_TYPE_ZZZ,&W0,&M,&CS,&DS)!=0)
         {
             printf("ECDSA Verification Failed\n");
             exit(1);

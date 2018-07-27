@@ -128,7 +128,7 @@ int main()
     OCT_output(&ID);
 
     /* Hash ID */
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&ID,&HCID);
+    HASH_ID(HASH_TYPE_ZZZ,&ID,&HCID);
     OCT_output(&HCID);
 
     /* Generate Client master secret for MIRACL and Customer */
@@ -216,7 +216,7 @@ int main()
     OCT_output(&TOKEN);
 
     /* Client extracts PIN1 from secret to create Token */
-    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_MPIN_ZZZ,&ID, PIN1, &TOKEN);
+    rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&ID, PIN1, &TOKEN);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_EXTRACT_PIN( &ID, PIN, &TOKEN) Error %d\n", rtn);
@@ -230,11 +230,11 @@ int main()
     printf("TimeValue %d \n", TimeValue);
     char* message = "sign this message";
     OCT_jstring(&M,message);
-    HASH_ID(HASH_TYPE_MPIN_ZZZ,&M,&HM);
+    HASH_ID(HASH_TYPE_ZZZ,&M,&HM);
     printf("HM: 0x");
     OCT_output(&HM);
 
-    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_MPIN_ZZZ,0,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,&U,NULL,NULL,&HM,TimeValue,&Y1);
+    rtn = MPIN_ZZZ_CLIENT(HASH_TYPE_ZZZ,0,&ID,&RNG,&X,PIN2,&TOKEN,&SEC,&U,NULL,NULL,&HM,TimeValue,&Y1);
     if (rtn != 0)
     {
         printf("MPIN_ZZZ_CLIENT ERROR %d\n", rtn);
@@ -246,7 +246,7 @@ int main()
     OCT_output(&SEC);
 
     /* Server: Verify message */
-    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_MPIN_ZZZ,0,&HID,NULL,&Y2,&ServerSecret,&U,NULL,&SEC,NULL,NULL,&ID,&HM,TimeValue,&Pa);
+    rtn = MPIN_ZZZ_SERVER(HASH_TYPE_ZZZ,0,&HID,NULL,&Y2,&ServerSecret,&U,NULL,&SEC,NULL,NULL,&ID,&HM,TimeValue,&Pa);
     printf("Y2 = 0x");
     OCT_output(&Y2);
     if (rtn != 0)

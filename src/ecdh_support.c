@@ -197,6 +197,7 @@ void KDF2(int sha,octet *z,octet *p,int olen,octet *key)
         if (key->len+hlen>olen)  OCT_jbytes(key,H.val,olen%hlen);
         else                     OCT_joctet(key,&H);
     }
+
 }
 
 /* Password based Key Derivation Function */

@@ -31,8 +31,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef enum { false, true } bool;
-
 //#define DEBUG
 
 #define ECC 1

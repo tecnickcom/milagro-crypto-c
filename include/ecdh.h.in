@@ -31,14 +31,6 @@ under the License.
 #include "ecp_ZZZ.h"
 #include "ecdh_support.h"
 
-
-/*** START OF USER CONFIGURABLE SECTION -  ***/
-
-#define EAS_ZZZ 16 /**< Symmetric Key size - 128 bits */
-#define HASH_TYPE_ECC_ZZZ SHA512  /**< Hash type */
-
-/*** END OF USER CONFIGURABLE SECTION ***/
-
 #define EGS_ZZZ MODBYTES_XXX  /**< ECC Group Size in bytes */
 #define EFS_ZZZ MODBYTES_XXX  /**< ECC Field Size in bytes */
 
@@ -74,6 +66,8 @@ extern int  ECP_ZZZ_PUBLIC_KEY_VALIDATE(octet *W);
 	@return 0 or an error code
  */
 extern int ECP_ZZZ_SVDP_DH(octet *s,octet *W,octet *K);
+
+/* ECIES functions */
 /**	@brief ECIES Encryption
  *
 	IEEE-1363 ECIES Encryption

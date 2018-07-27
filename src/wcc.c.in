@@ -121,7 +121,7 @@ int WCC_ZZZ_SENDER_KEY(int sha, octet *xOct, octet *piaOct, octet *pibOct, octet
 
     char hv[6*WCC_PFS_ZZZ+1];
     octet HV= {0,sizeof(hv),hv};
-    char ht[WCC_PAS];
+    char ht[AESKEY_ZZZ];
     octet HT= {0,sizeof(ht),ht};
 
     BIG_XXX_fromBytes(x,xOct->val);
@@ -206,7 +206,7 @@ int WCC_ZZZ_SENDER_KEY(int sha, octet *xOct, octet *piaOct, octet *pibOct, octet
     mhashit(sha,0,&HV,&HT);
 
     OCT_empty(AESKeyOct);
-    OCT_jbytes(AESKeyOct,HT.val,WCC_PAS);
+    OCT_jbytes(AESKeyOct,HT.val,AESKEY_ZZZ);
 
     return 0;
 }
@@ -230,7 +230,7 @@ int WCC_ZZZ_RECEIVER_KEY(int sha, octet *yOct, octet *wOct,  octet *piaOct, octe
 
     char hv[6*WCC_PFS_ZZZ+1];
     octet HV= {0,sizeof(hv),hv};
-    char ht[WCC_PAS];
+    char ht[AESKEY_ZZZ];
     octet HT= {0,sizeof(ht),ht};
 
     BIG_XXX_fromBytes(y,yOct->val);
@@ -295,7 +295,7 @@ int WCC_ZZZ_RECEIVER_KEY(int sha, octet *yOct, octet *wOct,  octet *piaOct, octe
     mhashit(sha,0,&HV,&HT);
 
     OCT_empty(AESKeyOct);
-    OCT_jbytes(AESKeyOct,HT.val,WCC_PAS);
+    OCT_jbytes(AESKeyOct,HT.val,AESKEY_ZZZ);
 
     return 0;
 
