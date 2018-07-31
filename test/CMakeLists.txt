@@ -99,6 +99,7 @@ foreach(curve ${AMCL_CURVE})
   amcl_curve_field(PF "${curve}")
   amcl_curve_field(TC "${curve}")
   amcl_curve_field(TF "${curve}")
+  amcl_curve_field(CS "${curve}")
   
   amcl_curve_test(${curve} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in amcl_curve_${TC} "SUCCESS" "big/test_vector_big.txt")
   amcl_curve_test(${curve} test_big_consistency_${BD} test_big_consistency_XXX.c.in amcl_curve_${TC} "SUCCESS")
@@ -144,19 +145,21 @@ foreach(curve ${AMCL_CURVE})
   if(NOT ${PF} STREQUAL "NOT")
     amcl_curve_test(${curve} test_fp2_arithmetics_${TC}  test_fp2_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp2/test_vector_${TC}.txt")
     amcl_curve_test(${curve} test_fp4_arithmetics_${TC}  test_fp4_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp4/test_vector_${TC}.txt")
-    amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
-    amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
-    amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
+    if(CS STREQUAL "128")
+      amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
+    endif()
 
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CS STREQUAL "128")
       # Test arithmetics debug output functions - Linux specific code
       amcl_curve_test(${curve} test_output_functions_${TC} test_output_functions_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "output/test_vector_${TC}_${WORD_SIZE}.txt" "stdout.out")
-    endif()
+    endif(NOT ${PF} STREQUAL "NOT")
 
     ################################################
     # MPIN Tests
     ################################################
-    if(BUILD_MPIN)
+    if(BUILD_MPIN AND CS STREQUAL "128")
       amcl_curve_test(${curve} test_mpin_${TC}              test_mpin_ZZZ.c.in              amcl_mpin_${TC} "SUCCESS Error Code 0")
       amcl_curve_test(${curve} test_mpin_sign_${TC}         test_mpin_sign_ZZZ.c.in         amcl_mpin_${TC} "TEST PASSED")
       amcl_curve_test(${curve} test_mpin_good_${TC}         test_mpin_good_ZZZ.c.in         amcl_mpin_${TC} "SUCCESS Error Code 0")
@@ -181,7 +184,7 @@ foreach(curve ${AMCL_CURVE})
     ################################################
     # WCC Tests
     ################################################
-    if(BUILD_WCC)
+    if(BUILD_WCC AND CS STREQUAL "128")
       amcl_curve_test(${curve} test_wcc_${TC} test_wcc_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_random_${TC} test_wcc_random_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_invalid_points_${TC} test_wcc_invalid_points_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")

@@ -413,19 +413,34 @@ foreach(curve ${AMCL_CURVE})
   amcl_curve_field(PF "${curve}")
   amcl_curve_field(TC "${curve}")
   amcl_curve_field(TF "${curve}")
+  amcl_curve_field(CS "${curve}")
 
   if(NOT(PF STREQUAL "NOT"))
     amcl_configure_file_curve(include/fp2.h.in  include/fp2_${TF}.h  "${curve}" amcl_pairing_${TC}_GEN_HDRS)
     amcl_configure_file_curve(include/fp4.h.in  include/fp4_${TF}.h  "${curve}" amcl_pairing_${TC}_GEN_HDRS)
-    amcl_configure_file_curve(include/fp12.h.in include/fp12_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
-    amcl_configure_file_curve(include/ecp2.h.in include/ecp2_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
-    amcl_configure_file_curve(include/pair.h.in include/pair_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
 
     amcl_configure_file_curve(src/fp2.c.in  src/fp2_${TC}.c  "${curve}" amcl_pairing_${TC}_GEN_SRCS)
     amcl_configure_file_curve(src/fp4.c.in  src/fp4_${TC}.c  "${curve}" amcl_pairing_${TC}_GEN_SRCS)
-    amcl_configure_file_curve(src/fp12.c.in src/fp12_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
-    amcl_configure_file_curve(src/ecp2.c.in src/ecp2_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
-    amcl_configure_file_curve(src/pair.c.in src/pair_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+
+    if(CS STREQUAL "128")
+      amcl_configure_file_curve(include/fp12.h.in include/fp12_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/ecp2.h.in include/ecp2_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/pair.h.in include/pair_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+      amcl_configure_file_curve(src/fp12.c.in src/fp12_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/ecp2.c.in src/ecp2_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/pair.c.in src/pair_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    elseif(CS STREQUAL "192")
+      amcl_configure_file_curve(include/fp8.h.in include/fp8_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/fp24.h.in include/fp24_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/ecp4.h.in include/ecp4_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/pair192.h.in include/pair192_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+      amcl_configure_file_curve(src/fp8.c.in src/fp8_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/fp24.c.in src/fp24_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/ecp4.c.in src/ecp4_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/pair192.c.in src/pair192_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    endif(CS STREQUAL "128")
 
     message(STATUS "Build libamcl_pairing_${TC}")
     add_library(amcl_pairing_${TC}
@@ -460,7 +475,7 @@ foreach(curve ${AMCL_CURVE})
       ${amcl_pairing_${TC}_GEN_HDRS}
       DESTINATION ${INSTALL_INCLUDESUBDIR}
     )
-  endif()
+  endif(NOT(PF STREQUAL "NOT"))
 endforeach()
 
 ##################################################
@@ -469,10 +484,16 @@ endforeach()
 if(BUILD_MPIN)
   foreach(curve ${AMCL_CURVE})
     amcl_curve_field(TC "${curve}")
+    amcl_curve_field(CS "${curve}")
 
     if(TARGET amcl_pairing_${TC})
-      amcl_configure_file_curve(include/mpin.h.in include/mpin_${TC}.h "${curve}" amcl_mpin_${TC}_GEN_HDRS)
-      amcl_configure_file_curve(src/mpin.c.in     src/mpin_${TC}.c     "${curve}" amcl_mpin_${TC}_GEN_SRCS)
+      if(CS STREQUAL "128")
+        amcl_configure_file_curve(include/mpin.h.in include/mpin_${TC}.h "${curve}" amcl_mpin_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/mpin.c.in     src/mpin_${TC}.c     "${curve}" amcl_mpin_${TC}_GEN_SRCS)
+      else(CS STREQUAL "128")
+        amcl_configure_file_curve(include/mpin${CS}.h.in include/mpin${CS}_${TC}.h "${curve}" amcl_mpin_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/mpin${CS}.c.in     src/mpin${CS}_${TC}.c     "${curve}" amcl_mpin_${TC}_GEN_SRCS)
+      endif(CS STREQUAL "128")
 
       message(STATUS "Build libamcl_mpin_${TC}")
       add_library(amcl_mpin_${TC}
@@ -517,8 +538,9 @@ endif()
 if(BUILD_WCC)
   foreach(curve ${AMCL_CURVE})
     amcl_curve_field(TC "${curve}")
+    amcl_curve_field(CS "${curve}")
 
-    if(TARGET amcl_pairing_${TC})
+    if(TARGET amcl_pairing_${TC} AND CS STREQUAL "128")
       amcl_configure_file_curve(include/wcc.h.in include/wcc_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
       amcl_configure_file_curve(src/wcc.c.in     src/wcc_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
 
