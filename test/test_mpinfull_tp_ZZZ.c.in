@@ -29,9 +29,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "mpin_ZZZ.h"
+#include "config_curve_ZZZ.h"
 #include "pbc_support.h"
 #include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "mpin_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "mpin192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "mpin256_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*PFS_ZZZ
+#endif
+#define GTLEN 3*G2LEN
 
 // #define DEBUG
 
@@ -66,7 +82,7 @@ int main()
     octet CS2= {0,sizeof(cs2), cs2};
 
     /* Server secret and shares */
-    char ss1[4*PFS_ZZZ], ss2[4*PFS_ZZZ], serverSecret[4*PFS_ZZZ];
+    char ss1[G2LEN], ss2[G2LEN], serverSecret[G2LEN];
     octet ServerSecret= {0,sizeof(serverSecret),serverSecret};
     octet SS1= {0,sizeof(ss1),ss1};
     octet SS2= {0,sizeof(ss2),ss2};
@@ -82,7 +98,7 @@ int main()
     octet TOKEN= {0,sizeof(token),token};
 
     /* Precomputed values stored on device */
-    char g1[12*PFS_ZZZ],g2[12*PFS_ZZZ];
+    char g1[GTLEN],g2[GTLEN];
     octet G1= {0,sizeof(g1),g1};
     octet G2= {0,sizeof(g2),g2};
 
@@ -94,7 +110,7 @@ int main()
     octet HID= {0,sizeof(hid),hid};
     octet HTID= {0,sizeof(htid),htid};
 
-    char e[12*PFS_ZZZ], f[12*PFS_ZZZ];
+    char e[GTLEN], f[GTLEN];
     octet E= {0,sizeof(e),e};
     octet F= {0,sizeof(f),f};
 

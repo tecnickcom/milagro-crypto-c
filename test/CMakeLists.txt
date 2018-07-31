@@ -159,7 +159,7 @@ foreach(curve ${AMCL_CURVE})
     ################################################
     # MPIN Tests
     ################################################
-    if(BUILD_MPIN AND CS STREQUAL "128")
+    if(BUILD_MPIN)
       amcl_curve_test(${curve} test_mpin_${TC}              test_mpin_ZZZ.c.in              amcl_mpin_${TC} "SUCCESS Error Code 0")
       amcl_curve_test(${curve} test_mpin_sign_${TC}         test_mpin_sign_ZZZ.c.in         amcl_mpin_${TC} "TEST PASSED")
       amcl_curve_test(${curve} test_mpin_good_${TC}         test_mpin_good_ZZZ.c.in         amcl_mpin_${TC} "SUCCESS Error Code 0")
@@ -177,7 +177,7 @@ foreach(curve ${AMCL_CURVE})
       amcl_curve_test(${curve} test_mpinfull_onepass_${TC}  test_mpinfull_onepass_ZZZ.c.in  amcl_mpin_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_mpinfull_random_${TC}   test_mpinfull_random_ZZZ.c.in   amcl_mpin_${TC} "SUCCESS")
       if(curve STREQUAL "BN254CX")
-	amcl_curve_test(${curve} test_mpin_vectors_${TC}    test_mpin_vectors_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BN254_CX.txt")
+	     amcl_curve_test(${curve} test_mpin_vectors_${TC}    test_mpin_vectors_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BN254_CX.txt")
       endif()
     endif()
 
