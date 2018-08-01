@@ -148,8 +148,8 @@ foreach(curve ${AMCL_CURVE})
     if(CS STREQUAL "128")
       amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
-      amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
     endif()
+    amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
 
     if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CS STREQUAL "128")
       # Test arithmetics debug output functions - Linux specific code
