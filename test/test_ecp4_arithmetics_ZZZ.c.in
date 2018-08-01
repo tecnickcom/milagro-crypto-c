@@ -165,6 +165,7 @@ int main(int argc, char** argv)
             }
             ECP4_ZZZ_toOctet(&OCTaux,&ecp41);
             ECP4_ZZZ_fromOctet(&ECP4aux1,&OCTaux);
+            ECP4_ZZZ_reduce(&ECP4aux1);
             if(!ECP4_ZZZ_equals(&ECP4aux1,&ecp41))
             {
                 printf("ERROR converting ECP4_ZZZ to/from OCTET, line %d\n",i);
@@ -198,9 +199,11 @@ int main(int argc, char** argv)
             }
             ECP4_ZZZ_copy(&ECP4aux1,&ecp41);
             ECP4_ZZZ_add(&ECP4aux1,&ecp42);
+            ECP4_ZZZ_reduce(&ECP4aux1);
             ECP4_ZZZ_affine(&ECP4aux1);
             ECP4_ZZZ_copy(&ECP4aux2,&ecp42); // testing commutativity P+Q = Q+P
             ECP4_ZZZ_add(&ECP4aux2,&ecp41);
+            ECP4_ZZZ_reduce(&ECP4aux1);
             ECP4_ZZZ_affine(&ECP4aux2);
             if(!ECP4_ZZZ_equals(&ECP4aux1,&ecp4sum) || !ECP4_ZZZ_equals(&ECP4aux2,&ecp4sum))
             {
@@ -359,6 +362,10 @@ int main(int argc, char** argv)
             {
                 printf("ERROR identifying a wrong ECP4_ZZZ, line %d\n",i);
                 exit(EXIT_FAILURE);
+            }
+            if(ECP4_ZZZ_setx(&ECP4aux1,&ecp4wrong.x))
+            {
+                printf("ERROR identifying a wrong ECP4_ZZZ x, line %d\n",i);
             }
         }
         if (!strncmp(line,  ECP4infline, strlen(ECP4infline)))

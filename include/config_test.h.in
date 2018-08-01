@@ -24,6 +24,10 @@
  * under the License.
  */
 
+#ifndef CONFIG_TEST_H
+#define CONFIG_TEST_H
 
 const int nTimePermitTests = @PBC_TIME_PERMIT_TESTS@;  /**< MPin Time Permit Tests */
 const int nRandomTests = @PBC_RANDOM_TESTS@;           /**< MPin Random Tests */
+
+#endif

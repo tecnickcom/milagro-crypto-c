@@ -29,9 +29,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "randapi.h"
-#include "wcc_ZZZ.h"
+#include "utils.h"
+#include "config_curve_ZZZ.h"
 #include "config_test.h"
+#include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "wcc_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "wcc192_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*WCC_PFS_ZZZ
+#endif
 
 // #define DEBUG
 
@@ -47,7 +59,7 @@ int main()
     octet AKeyG1= {0,sizeof(akeyG1), akeyG1};
 
     // Receiver key
-    char bkeyG2[4*WCC_PFS_ZZZ];
+    char bkeyG2[G2LEN];
     octet BKeyG2= {0,sizeof(bkeyG2), bkeyG2};
 
     // Identities
@@ -76,14 +88,14 @@ int main()
     octet PgG1= {0,sizeof(pgg1), pgg1};
     char pag1[2*WCC_PFS_ZZZ+1];
     octet PaG1= {0,sizeof(pag1), pag1};
-    char pbg2[4*WCC_PFS_ZZZ];
+    char pbg2[G2LEN];
     octet PbG2= {0,sizeof(pbg2), pbg2};
 
     // Invalid points
     char invalidG1[2*WCC_PFS_ZZZ+1];
     octet InvalidG1= {0,sizeof(invalidG1), invalidG1};
 
-    char invalidG2[4*WCC_PFS_ZZZ];
+    char invalidG2[G2LEN];
     octet InvalidG2= {0,sizeof(invalidG2), invalidG2};
 
     // Session keys

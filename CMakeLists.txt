@@ -540,13 +540,18 @@ if(BUILD_WCC)
     amcl_curve_field(TC "${curve}")
     amcl_curve_field(CS "${curve}")
 
-    if(TARGET amcl_pairing_${TC} AND CS STREQUAL "128")
-      amcl_configure_file_curve(include/wcc.h.in include/wcc_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
-      amcl_configure_file_curve(src/wcc.c.in     src/wcc_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
+    if(TARGET amcl_pairing_${TC})
+      if(CS STREQUAL "128")
+        amcl_configure_file_curve(include/wcc.h.in include/wcc_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/wcc.c.in     src/wcc_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
+      else(CS STREQUAL "128")
+        amcl_configure_file_curve(include/wcc${CS}.h.in include/wcc${CS}_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/wcc${CS}.c.in     src/wcc${CS}_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
+      endif(CS STREQUAL "128")
 
       message(STATUS "Build libamcl_wcc_${TC}")
       add_library(amcl_wcc_${TC}
-        ${CMAKE_CURRENT_BINARY_DIR}/src/wcc_${TC}.c
+        ${amcl_wcc_${TC}_GEN_SRCS}
       )
       list(APPEND AMCL_LIBRARIES amcl_wcc_${TC})
 

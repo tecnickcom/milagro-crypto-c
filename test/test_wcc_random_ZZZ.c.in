@@ -29,9 +29,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "randapi.h"
-#include "wcc_ZZZ.h"
+#include "utils.h"
+#include "config_curve_ZZZ.h"
 #include "config_test.h"
+#include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "wcc_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "wcc192_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*WCC_PFS_ZZZ
+#endif
 
 // #define DEBUG
 
@@ -67,10 +79,10 @@ int main()
     octet AKeyG1= {0,sizeof(akeyG1), akeyG1};
 
     // Receiver keys
-    char b1keyG2[4*WCC_PFS_ZZZ], b2keyG2[4*WCC_PFS_ZZZ];
+    char b1keyG2[G2LEN], b2keyG2[G2LEN];
     octet B1KeyG2= {0,sizeof(b1keyG2), b1keyG2};
     octet B2KeyG2= {0,sizeof(b2keyG2), b2keyG2};
-    char bkeyG2[4*WCC_PFS_ZZZ];
+    char bkeyG2[G2LEN];
     octet BKeyG2= {0,sizeof(bkeyG2), bkeyG2};
 
     // Identities
@@ -100,7 +112,7 @@ int main()
     char pag1[2*WCC_PFS_ZZZ+1];
     octet PaG1= {0,sizeof(pag1), pag1};
 
-    char pbg2[4*WCC_PFS_ZZZ];
+    char pbg2[G2LEN];
     octet PbG2= {0,sizeof(pbg2), pbg2};
 
     char message1[256];
