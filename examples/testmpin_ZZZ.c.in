@@ -30,8 +30,21 @@ under the License.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "mpin_ZZZ.h"
+#include "config_curve_ZZZ.h"
 #include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "mpin_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "mpin192_ZZZ.h"
+#endif
+
+// Support multiple security levels
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*PFS_ZZZ
+#endif
+#define GTLEN 3*G2LEN
 
 //#define PERMITS  /* for time permits ON or OFF */
 #define PINERROR /* For PIN ERROR detection ON or OFF */
@@ -46,12 +59,12 @@ int mpin(csprng *RNG)
 #else
     int date=0;
 #endif
-    char x[PGS_ZZZ],s[PGS_ZZZ],y[PGS_ZZZ],client_id[100],sst[4*PFS_ZZZ],token[2*PFS_ZZZ+1],sec[2*PFS_ZZZ+1],permit[2*PFS_ZZZ+1],xcid[2*PFS_ZZZ+1],xid[2*PFS_ZZZ+1],e[12*PFS_ZZZ],f[12*PFS_ZZZ];
+    char x[PGS_ZZZ],s[PGS_ZZZ],y[PGS_ZZZ],client_id[100],sst[G2LEN],token[2*PFS_ZZZ+1],sec[2*PFS_ZZZ+1],permit[2*PFS_ZZZ+1],xcid[2*PFS_ZZZ+1],xid[2*PFS_ZZZ+1],e[GTLEN],f[GTLEN];
     char hcid[PFS_ZZZ],hsid[PFS_ZZZ],hid[2*PFS_ZZZ+1],htid[2*PFS_ZZZ+1],h[PGS_ZZZ];
 #ifdef FULL
     char r[PGS_ZZZ],z[2*PFS_ZZZ+1],w[PGS_ZZZ],t[2*PFS_ZZZ+1];
-    char g1[12*PFS_ZZZ],g2[12*PFS_ZZZ];
-    char ck[MPIN_PAS],sk[MPIN_PAS];
+    char g1[GTLEN],g2[GTLEN];
+    char ck[AESKEY_ZZZ],sk[AESKEY_ZZZ];
 #endif
     octet S= {0,sizeof(s),s};
     octet X= {0,sizeof(x),x};
@@ -157,9 +170,9 @@ int mpin(csprng *RNG)
 
     /* Set date=0 and PERMIT=NULL if time permits not in use
 
-    Client First MPIN_PASs: Inputs CLIENT_ID, optional RNG, pin, TOKEN and PERMIT. Output xID = x.H(CLIENT_ID) and re-combined secret SEC
+    Client First pass: Inputs CLIENT_ID, optional RNG, pin, TOKEN and PERMIT. Output xID = x.H(CLIENT_ID) and re-combined secret SEC
     If PERMITS are is use, then date!=0 and PERMIT is added to secret and xCID = x.(H(CLIENT_ID)+H(date|H(CLIENT_ID)))
-    Random value x is supplied externally if RNG=NULL, otherwise generated and MPIN_PASsed out by RNG
+    Random value x is supplied externally if RNG=NULL, otherwise generated and passed out by RNG
 
     HSID - hashed client ID as calculated by the server
     HCID - hashed client ID as calculated by the client
@@ -227,7 +240,7 @@ int mpin(csprng *RNG)
     printf("MPIN Multi Pass\n");
     if (MPIN_ZZZ_CLIENT_1(HASH_TYPE_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT)!=0)
     {
-        printf("Error from Client side - First MPIN_PASs\n");
+        printf("Error from Client side - First pass\n");
         return 0;
     }
 
@@ -249,10 +262,10 @@ int mpin(csprng *RNG)
     MPIN_ZZZ_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  /* Also send T=w.ID to client, remember random w, DH component  */
 #endif
 
-    /* Client Second MPIN_PASs: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
+    /* Client Second pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC */
     if (MPIN_ZZZ_CLIENT_2(&X,&Y,&SEC)!=0)
     {
-        printf("Error from Client side - Second MPIN_PASs\n");
+        printf("Error from Client side - Second MPIN pass\n");
         return 1;
     }
 

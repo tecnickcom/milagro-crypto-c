@@ -26,7 +26,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "pair_ZZZ.h" /* Make sure and select a pairing-friendly curve in here! */
+#include "config_curve_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "pair_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "pair192_ZZZ.h"
+#endif
+
+#define N_ITER 16
+
+// Renamings for multiple security level support
+#if CURVE_SECURITY_ZZZ == 128
+#define ECPG2_ZZZ_generator ECP2_ZZZ_generator
+#define ECPG2_ZZZ_set ECP2_ZZZ_set
+#define ECPG2_ZZZ_copy ECP2_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP2_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP2_ZZZ_isinf
+#define GT_ZZZ_copy FP12_YYY_copy
+#define GT_ZZZ_isunity FP12_YYY_isunity
+#define GT_ZZZ_equals FP12_YYY_equals
+#define GT_ZZZ_compow FP12_YYY_compow
+#elif CURVE_SECURITY_ZZZ == 192
+#define ECPG2_ZZZ_generator ECP4_ZZZ_generator
+#define ECPG2_ZZZ_set ECP4_ZZZ_set
+#define ECPG2_ZZZ_copy ECP4_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP4_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP4_ZZZ_isinf
+#define GT_ZZZ_copy FP24_YYY_copy
+#define GT_ZZZ_isunity FP24_YYY_isunity
+#define GT_ZZZ_equals FP24_YYY_equals
+#define GT_ZZZ_compow FP24_YYY_compow
+#endif
 
 #define MIN_TIME 10.0
 #define MIN_ITERS 10
@@ -63,19 +93,20 @@ int main()
     double elapsed;
 
     ECP_ZZZ P,G;
+#if CURVE_SECURITY_ZZZ == 128
     ECP2_ZZZ Q,W;
     FP12_YYY g,w;
     FP4_YYY cm;
-    FP2_YYY wx,wy;
+#elif CURVE_SECURITY_ZZZ == 192
+    ECP4_ZZZ Q,W;
+    FP24_YYY g,w;
+    FP8_YYY cm;
+#endif
 
-    BIG_XXX s,r,x,y;
+    BIG_XXX s,r;
     printf("\nTesting/Timing ZZZ Pairings\n");
 
-    BIG_XXX_rcopy(x,CURVE_Gx_ZZZ);
-
-    BIG_XXX_rcopy(y,CURVE_Gy_ZZZ);
-    ECP_ZZZ_set(&G,x,y);
-
+    ECP_ZZZ_generator(&G);
 
     BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
     BIG_XXX_randomnum(s,r,&RNG);
@@ -103,17 +134,12 @@ int main()
     printf("G1 mul              - %8d iterations  ",iterations);
     printf(" %8.2lf ms per iteration\n",elapsed);
 
+    ECPG2_ZZZ_generator(&W);
 
-    FP_YYY_rcopy(&(wx.a),CURVE_Pxa_ZZZ);
-    FP_YYY_rcopy(&(wx.b),CURVE_Pxb_ZZZ);
-    FP_YYY_rcopy(&(wy.a),CURVE_Pya_ZZZ);
-    FP_YYY_rcopy(&(wy.b),CURVE_Pyb_ZZZ);
-    ECP2_ZZZ_set(&W,&wx,&wy);
+    ECPG2_ZZZ_copy(&Q,&W);
+    ECPG2_ZZZ_mul(&Q,r);
 
-    ECP2_ZZZ_copy(&Q,&W);
-    ECP2_ZZZ_mul(&Q,r);
-
-    if (!ECP2_ZZZ_isinf(&Q))
+    if (!ECPG2_ZZZ_isinf(&Q))
     {
         printf("FAILURE - rQ!=O\n");
         return 0;
@@ -123,7 +149,7 @@ int main()
     start=clock();
     do
     {
-        ECP2_ZZZ_copy(&Q,&W);
+        ECPG2_ZZZ_copy(&Q,&W);
         PAIR_ZZZ_G2mul(&Q,s);
 
         iterations++;
@@ -137,11 +163,11 @@ int main()
     PAIR_ZZZ_ate(&w,&Q,&P);
     PAIR_ZZZ_fexp(&w);
 
-    FP12_YYY_copy(&g,&w);
+    GT_ZZZ_copy(&g,&w);
 
     PAIR_ZZZ_GTpow(&g,r);
 
-    if (!FP12_YYY_isunity(&g))
+    if (!GT_ZZZ_isunity(&g))
     {
         printf("FAILURE - g^r!=1\n");
         return 0;
@@ -151,7 +177,7 @@ int main()
     start=clock();
     do
     {
-        FP12_YYY_copy(&g,&w);
+        GT_ZZZ_copy(&g,&w);
         PAIR_ZZZ_GTpow(&g,s);
 
         iterations++;
@@ -162,13 +188,13 @@ int main()
     printf("GT pow              - %8d iterations  ",iterations);
     printf(" %8.2lf ms per iteration\n",elapsed);
 
-    FP12_YYY_copy(&g,&w);
+    GT_ZZZ_copy(&g,&w);
 
     iterations=0;
     start=clock();
     do
     {
-        FP12_YYY_compow(&cm,&g,s,r);
+        GT_ZZZ_compow(&cm,&g,s,r);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
     }
@@ -194,7 +220,7 @@ int main()
     start=clock();
     do
     {
-        FP12_YYY_copy(&g,&w);
+        GT_ZZZ_copy(&g,&w);
         PAIR_ZZZ_fexp(&g);
         iterations++;
         elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
@@ -205,7 +231,7 @@ int main()
     printf(" %8.2lf ms per iteration\n",elapsed);
 
     ECP_ZZZ_copy(&P,&G);
-    ECP2_ZZZ_copy(&Q,&W);
+    ECPG2_ZZZ_copy(&Q,&W);
 
     PAIR_ZZZ_G1mul(&P,s);
     PAIR_ZZZ_ate(&g,&Q,&P);
@@ -217,19 +243,19 @@ int main()
     PAIR_ZZZ_ate(&w,&Q,&P);
     PAIR_ZZZ_fexp(&w);
 
-    if (!FP12_YYY_equals(&g,&w))
+    if (!GT_ZZZ_equals(&g,&w))
     {
         printf("FAILURE - e(sQ,p)!=e(Q,sP) \n");
         return 1;
     }
 
-    ECP2_ZZZ_copy(&Q,&W);
+    ECPG2_ZZZ_copy(&Q,&W);
     PAIR_ZZZ_ate(&g,&Q,&P);
     PAIR_ZZZ_fexp(&g);
 
     PAIR_ZZZ_GTpow(&g,s);
 
-    if (!FP12_YYY_equals(&g,&w))
+    if (!GT_ZZZ_equals(&g,&w))
     {
         printf("FAILURE - e(sQ,p)!=e(Q,P)^s \n");
         return 1;

@@ -26,7 +26,7 @@ foreach(curve ${AMCL_CURVE})
   add_executable(testecdh_${TC} ${testecdh_${TC}_GEN_SRCS})
   target_link_libraries(testecdh_${TC} PRIVATE amcl_curve_${TC})
 
-  if(TARGET amcl_mpin_${TC} AND ${CS} STREQUAL "128")
+  if(TARGET amcl_mpin_${TC})
     amcl_configure_file_curve(testmpin_ZZZ.c.in testmpin_${TC}.c "${curve}" testmpin_${TC}_GEN_SRCS)
     add_executable(testmpin_${TC} ${testmpin_${TC}_GEN_SRCS})
     target_link_libraries(testmpin_${TC} PRIVATE amcl_mpin_${TC})
