@@ -151,10 +151,10 @@ foreach(curve ${AMCL_CURVE})
     endif()
     amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
 
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CS STREQUAL "128")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
       # Test arithmetics debug output functions - Linux specific code
       amcl_curve_test(${curve} test_output_functions_${TC} test_output_functions_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "output/test_vector_${TC}_${WORD_SIZE}.txt" "stdout.out")
-    endif(NOT ${PF} STREQUAL "NOT")
+    endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
     ################################################
     # MPIN Tests
