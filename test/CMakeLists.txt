@@ -148,22 +148,25 @@ foreach(curve ${AMCL_CURVE})
     if(CS STREQUAL "128")
       amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
     elseif(CS STREQUAL "192")
       amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_fp24_arithmetics_${TC}  test_fp24_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp24/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp4_arithmetics_${TC} test_ecp4_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp4/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
+    elseif(CS STREQUAL "256")
+      amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
     endif(CS STREQUAL "128")
-    amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
 
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT (CS STREQUAL "256"))
       # Test arithmetics debug output functions - Linux specific code
       amcl_curve_test(${curve} test_output_functions_${TC} test_output_functions_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "output/test_vector_${TC}_${WORD_SIZE}.txt" "stdout.out")
-    endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    endif(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT (CS STREQUAL "256"))
 
     ################################################
     # MPIN Tests
     ################################################
-    if(BUILD_MPIN)
+    if(BUILD_MPIN AND NOT (CS STREQUAL "256"))
       amcl_curve_test(${curve} test_mpin_${TC}              test_mpin_ZZZ.c.in              amcl_mpin_${TC} "SUCCESS Error Code 0")
       amcl_curve_test(${curve} test_mpin_sign_${TC}         test_mpin_sign_ZZZ.c.in         amcl_mpin_${TC} "TEST PASSED")
       amcl_curve_test(${curve} test_mpin_good_${TC}         test_mpin_good_ZZZ.c.in         amcl_mpin_${TC} "SUCCESS Error Code 0")
@@ -188,7 +191,7 @@ foreach(curve ${AMCL_CURVE})
     ################################################
     # WCC Tests
     ################################################
-    if(BUILD_WCC)
+    if(BUILD_WCC AND NOT (CS STREQUAL "256"))
       amcl_curve_test(${curve} test_wcc_${TC} test_wcc_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_random_${TC} test_wcc_random_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_invalid_points_${TC} test_wcc_invalid_points_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")

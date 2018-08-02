@@ -27,18 +27,20 @@ foreach(curve ${AMCL_CURVE})
   add_executable(benchtest_ec_${TC} ${benchtest_ec_${TC}_GEN_SRCS})
   target_link_libraries(benchtest_ec_${TC} PRIVATE amcl_curve_${TC})
 
-  # Pairing Benchmark
-  if(TARGET amcl_pairing_${TC})
-    amcl_configure_file_curve(benchtest_pair_ZZZ.c.in benchtest_pair_${TC}.c "${curve}" benchtest_pair_${TC}_GEN_SRCS)
-    add_executable(benchtest_pair_${TC} ${benchtest_pair_${TC}_GEN_SRCS})
-    target_link_libraries(benchtest_pair_${TC} PRIVATE amcl_pairing_${TC})
-  endif()
+  if(NOT (CS STREQUAL "256"))
+    # Pairing Benchmark
+    if(TARGET amcl_pairing_${TC})
+      amcl_configure_file_curve(benchtest_pair_ZZZ.c.in benchtest_pair_${TC}.c "${curve}" benchtest_pair_${TC}_GEN_SRCS)
+      add_executable(benchtest_pair_${TC} ${benchtest_pair_${TC}_GEN_SRCS})
+      target_link_libraries(benchtest_pair_${TC} PRIVATE amcl_pairing_${TC})
+    endif()
 
-  # MPIN Benchmark
-  if(TARGET amcl_mpin_${TC})
-    amcl_configure_file_curve(benchtest_mpin_ZZZ.c.in benchtest_mpin_${TC}.c "${curve}" benchtest_mpin_${TC}_GEN_SRCS)
-    add_executable(benchtest_mpin_${TC} ${benchtest_mpin_${TC}_GEN_SRCS})
-    target_link_libraries(benchtest_mpin_${TC} PRIVATE amcl_mpin_${TC})
+    # MPIN Benchmark
+    if(TARGET amcl_mpin_${TC})
+      amcl_configure_file_curve(benchtest_mpin_ZZZ.c.in benchtest_mpin_${TC}.c "${curve}" benchtest_mpin_${TC}_GEN_SRCS)
+      add_executable(benchtest_mpin_${TC} ${benchtest_mpin_${TC}_GEN_SRCS})
+      target_link_libraries(benchtest_mpin_${TC} PRIVATE amcl_mpin_${TC})
+    endif()
   endif()
   
 endforeach()
