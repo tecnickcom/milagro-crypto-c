@@ -166,7 +166,7 @@ foreach(curve ${AMCL_CURVE})
     ################################################
     # MPIN Tests
     ################################################
-    if(BUILD_MPIN AND NOT (CS STREQUAL "256"))
+    if(BUILD_MPIN)
       amcl_curve_test(${curve} test_mpin_${TC}              test_mpin_ZZZ.c.in              amcl_mpin_${TC} "SUCCESS Error Code 0")
       amcl_curve_test(${curve} test_mpin_sign_${TC}         test_mpin_sign_ZZZ.c.in         amcl_mpin_${TC} "TEST PASSED")
       amcl_curve_test(${curve} test_mpin_good_${TC}         test_mpin_good_ZZZ.c.in         amcl_mpin_${TC} "SUCCESS Error Code 0")
