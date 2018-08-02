@@ -32,6 +32,8 @@
 #include "pair_ZZZ.h"
 #elif CURVE_SECURITY_ZZZ == 192
 #include "pair192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "pair256_ZZZ.h"
 #endif
 
 #define N_ITER 16
@@ -55,6 +57,15 @@
 #define ECPG2_ZZZ_isinf ECP4_ZZZ_isinf
 #define GT_ZZZ_equals FP24_YYY_equals
 #define GT_ZZZ_mul FP24_YYY_mul
+#elif CURVE_SECURITY_ZZZ == 256
+#define ECPG2_ZZZ_generator ECP8_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP8_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP8_ZZZ_mul
+#define ECPG2_ZZZ_add ECP8_ZZZ_add
+#define ECPG2_ZZZ_affine ECP8_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP8_ZZZ_isinf
+#define GT_ZZZ_equals FP48_YYY_equals
+#define GT_ZZZ_mul FP48_YYY_mul
 #endif
 
 int main()
@@ -69,6 +80,9 @@ int main()
 #elif CURVE_SECURITY_ZZZ == 192
     ECP4_ZZZ W,Q1,Q2,Q3;
     FP24_YYY g1,g2;
+#elif CURVE_SECURITY_ZZZ == 256
+    ECP8_ZZZ W,Q1,Q2,Q3;
+    FP48_YYY g1,g2;
 #endif
 
     char seed[100] = {0};
