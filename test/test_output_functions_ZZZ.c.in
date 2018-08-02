@@ -34,44 +34,92 @@
 #include "fp_YYY.h"
 #include "fp2_YYY.h"
 #include "fp4_YYY.h"
-#include "fp12_YYY.h"
 #include "ecp_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "fp12_YYY.h"
 #include "ecp2_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "fp8_YYY.h"
+#include "fp24_YYY.h"
+#include "ecp4_ZZZ.h"
+#endif
 
 extern int dup(int oldfd);
 extern int dup2(int oldfd, int newfd);
 extern int close(int fildes);
 extern int fileno(FILE *stream);
 
+#if CURVE_SECURITY_ZZZ == 128
 #define LINE_LEN 2000
+#elif CURVE_SECURITY_ZZZ == 192
+#define LINE_LEN 4000
+#endif
 
-void read_BIG(BIG_XXX A, char* string)
+
+/*
+ * Skips n closed brackets.
+ * Null terminates after the nth bracket and
+ * returns a pointer to the next char
+ */
+char* skip_cb(char* str, int n)
+{
+    int i;
+    char* next=str;
+
+    for(i=0; i<n; i++)
+    {
+        next = strchr(++next,']');
+        if (next == NULL)
+        {
+            printf("ERROR unexpected test vector\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    *(++next) = '\0';
+
+    return next++;
+}
+
+void read_BIG_XXX(BIG_XXX A, char* string)
 {
     int len;
     char support[LINE_LEN];
     BIG_XXX_zero(A);
     len = strlen(string)+1;
     amcl_hex2bin(string,support,len);
-    len = (len-1)/2;;
+    len = (len-1)/2;
     BIG_XXX_fromBytesLen(A,support,len);
     BIG_XXX_norm(A);
 }
 
-void read_DBIG(DBIG_XXX A, char* string)
+void read_DBIG_XXX(DBIG_XXX A, char* string)
 {
     int len;
-    char support[LINE_LEN];
+    char support[LINE_LEN] = "0";
     BIG_XXX_dzero(A);
-    len = strlen(string)+1;
-    amcl_hex2bin(string,support,len);
-    len = (len-1)/2;
-    BIG_XXX_dfromBytesLen(A,support,len);
+
+    // replace eventual line feed
+    len=strlen(string);
+    if(string[len-1] == '\x0a')
+    {
+        string[len-1]='\0';
+        len--;
+    }
+
+    // Handle odd length strings
+    if(len %2 == 0)
+        support[0]='\0';
+    strcat(support,string);
+
+    len = strlen(support);
+    amcl_hex2bin(support,support,len);
+    BIG_XXX_dfromBytesLen(A,support,len/2);
     BIG_XXX_dnorm(A);
 }
 
-void read_FP2(FP2_YYY *fp2, char* stringx)
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
 {
-    char *stringy, *end;
+    char *stringy;
     BIG_XXX x,y;
 
     stringy = strchr(++stringx,',');
@@ -80,111 +128,30 @@ void read_FP2(FP2_YYY *fp2, char* stringx)
         printf("ERROR unexpected test vector\n");
         exit(EXIT_FAILURE);
     }
-    *stringy = '\0';
+    *(stringy)=0;
+    skip_cb(stringy++,1);
 
-    end = strchr(++stringy,']');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    *end = '\0';
-
-    read_BIG(x,stringx);
-    read_BIG(y,stringy);
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
 
     FP2_YYY_from_BIGs(fp2,x,y);
 }
 
-void read_FP4(FP4_YYY *fp4, char* stringx)
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
 {
-    char *stringy, *end;
+    char *stringy;
     FP2_YYY x,y;
 
-    stringy = strchr(++stringx,']');
-    if (stringy == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    *(++stringy) = '\0';
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
 
-    end = strchr(++stringy,']');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    *(++end) = '\0';
-
-    read_FP2(&x,stringx);
-    read_FP2(&y,stringy);
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
 
     FP4_YYY_from_FP2s(fp4,&x,&y);
 }
 
-// Read a structure of the type [[[ax1,ax2],[ay1,ay2]],[[bx1,bx2],[by1,by2]],[[cx1,cx2],[cy1,cy2]]]
-void read_FP12(FP12_YYY *fp12, char *stringx)
-{
-    char *stringy, *stringz, *end;
-    FP4_YYY x,y,z;
-
-    stringy = strchr(++stringx,']');
-    if (stringy == NULL)
-    {
-        printf("ERROR unexpected test vector a\n");
-        exit(EXIT_FAILURE);
-    }
-    stringy = strchr(++stringy,']');
-    if (stringy == NULL)
-    {
-        printf("ERROR unexpected test vector b\n");
-        exit(EXIT_FAILURE);
-    }
-    stringy+=2;
-    *stringy = '\0';
-
-    stringz = strchr(++stringy,']');
-    if (stringz == NULL)
-    {
-        printf("ERROR unexpected test vector c\n");
-        exit(EXIT_FAILURE);
-    }
-    stringz = strchr(++stringz,']');
-    if (stringz == NULL)
-    {
-        printf("ERROR unexpected test vector d\n");
-        exit(EXIT_FAILURE);
-    }
-    stringz+=2;
-    *stringz = '\0';
-
-    end = strchr(++stringz,']');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector e\n");
-        exit(EXIT_FAILURE);
-    }
-    end = strchr(++end,']');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector f\n");
-        exit(EXIT_FAILURE);
-    }
-    end+=2;
-    *end = '\0';
-
-    read_FP4(&x,stringx);
-    read_FP4(&y,stringy);
-    read_FP4(&z,stringz);
-
-    FP12_YYY_from_FP4s(fp12,&x,&y,&z);
-
-    FP12_YYY_reduce(fp12);
-    FP12_YYY_norm(fp12);
-}
-
-int read_ECP(ECP_ZZZ *ecp, char* string)
+int read_ECP_ZZZ(ECP_ZZZ *ecp, char* string)
 {
     BIG_XXX x;
     char *end;
@@ -206,62 +173,84 @@ int read_ECP(ECP_ZZZ *ecp, char* string)
         exit(EXIT_FAILURE);
     }
     end[0] = '\0';
-    read_BIG(x,string);
-    read_BIG(y,stringy);
+    read_BIG_XXX(x,string);
+    read_BIG_XXX(y,stringy);
     return ECP_ZZZ_set(ecp,x,y);
 }
 
-//#if (CHOICE >= BN_CURVES)
-int read_ECP2(ECP2_ZZZ *ecp2, char* stringx1)
+#if CURVE_SECURITY_ZZZ == 128
+void read_FP12_YYY(FP12_YYY *fp12, char *stringx)
 {
-    char *stringx2, *stringy1, *stringy2, *end;
-    BIG_XXX x1,x2,y1,y2;
+    char *stringy, *stringz;
+    FP4_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,3);
+    stringz = skip_cb(stringy++,3);
+    skip_cb(stringz++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+    read_FP4_YYY(&z,stringz);
+
+    FP12_YYY_from_FP4s(fp12,&x,&y,&z);
+}
+int read_ECP2_ZZZ(ECP2_ZZZ *ecp2, char* stringx)
+{
+    char *stringy;
     FP2_YYY x,y;
 
-    stringx1 += 2;
-    stringx2 = strchr(stringx1,',');
-    if (stringx2 == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    stringx2[0] = '\0';
-    stringx2 ++;
-    stringy1 = strchr(stringx2,']');
-    if (stringy1 == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    stringy1[0] = '\0';
-    stringy1 += 3;
-    stringy2 = strchr(stringy1,',');
-    if (stringy2 == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    stringy2[0] = '\0';
-    stringy2++;
-    end = strchr(stringy2,']');
-    if (end == NULL)
-    {
-        printf("ERROR unexpected test vector\n");
-        exit(EXIT_FAILURE);
-    }
-    end[0] = '\0';
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
 
-    read_BIG(x1,stringx1);
-    read_BIG(x2,stringx2);
-    read_BIG(y1,stringy1);
-    read_BIG(y2,stringy2);
-
-    FP2_YYY_from_BIGs(&x,x1,x2);
-    FP2_YYY_from_BIGs(&y,y1,y2);
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
 
     return ECP2_ZZZ_set(ecp2,&x,&y);
 }
-//#endif
+#elif CURVE_SECURITY_ZZZ == 192
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+void read_FP24_YYY(FP24_YYY *fp24, char *stringx)
+{
+    char *stringy, *stringz;
+    FP8_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,7);
+    stringz = skip_cb(stringy++,7);
+    skip_cb(stringz++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+    read_FP8_YYY(&z,stringz);
+
+    FP24_YYY_from_FP8s(fp24,&x,&y,&z);
+
+}
+int read_ECP4_ZZZ(ECP4_ZZZ *ecp4, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    return ECP4_ZZZ_set(ecp4,&x,&y);
+}
+#endif
 
 void read_OCT(octet *oct, char* string, int len)
 {
@@ -294,16 +283,6 @@ int main(int argc, char** argv)
     FP_YYY fp;
     const char* FPline = "FP = ";
     const char* FPrawline = "FPraw = ";
-// #if (CHOICE >= BN_CURVES)
-    FP2_YYY fp2, fp2aux;
-    const char* FP2line = "FP2 = ";
-    const char* FP2rawline = "FP2raw = ";
-    FP4_YYY fp4;
-    const char* FP4line = "FP4 = ";
-    const char* FP4rawline = "FP4raw = ";
-    FP12_YYY fp12;
-    const char* FP12line = "FP12 = ";
-// #endif
     ECP_ZZZ ecp;
     ECP_ZZZ ecpinf;
     const char* ECPline = "ECP = ";
@@ -312,14 +291,34 @@ int main(int argc, char** argv)
     const char* ECPinfline = "ECPinf = ";
     const char* ECPinfxyzline = "ECPinfxyz = ";
     const char* ECPinfrawline = "ECPinfraw = ";
-// #if (CHOICE >= BN_CURVES)
+    FP2_YYY fp2;
+    const char* FP2line = "FP2 = ";
+    const char* FP2rawline = "FP2raw = ";
+    FP4_YYY fp4;
+    const char* FP4line = "FP4 = ";
+    const char* FP4rawline = "FP4raw = ";
+# if CURVE_SECURITY_ZZZ == 128
+    FP12_YYY fp12;
+    const char* FP12line = "FP12 = ";
+    FP2_YYY fp2aux;
     ECP2_ZZZ ecp2;
     ECP2_ZZZ ecp2inf;
     const char* ECP2line = "ECP2 = ";
     const char* ECP2xyzline = "ECP2xyz = ";
     const char* ECP2infline = "ECP2inf = ";
     const char* ECP2infxyzline = "ECP2infxyz = ";
-// #endif
+#elif CURVE_SECURITY_ZZZ == 192
+    FP8_YYY fp8;
+    const char* FP8line = "FP8 = ";
+    const char* FP8rawline = "FP8raw = ";
+    FP24_YYY fp24;
+    const char* FP24line = "FP24 = ";
+    FP4_YYY fp4aux;
+    ECP4_ZZZ ecp4;
+    ECP4_ZZZ ecp4inf;
+    const char* ECP4line = "ECP4 = ";
+    const char* ECP4infline = "ECP4inf = ";
+#endif
     char octbuf[LINE_LEN];
     octet oct = {0,sizeof(octbuf),octbuf};
     const char* OCTline = "OCT = ";
@@ -351,7 +350,7 @@ int main(int argc, char** argv)
         {
             len = strlen(BIGline);
             linePtr = line + len;
-            read_BIG(big, linePtr);
+            read_BIG_XXX(big, linePtr);
             printf("%s",BIGline);
             BIG_XXX_output(big);
             printf("\n");
@@ -364,7 +363,7 @@ int main(int argc, char** argv)
         {
             len = strlen(DBIGline);
             linePtr = line + len;
-            read_DBIG(dbig, linePtr);
+            read_DBIG_XXX(dbig, linePtr);
             printf("%s",DBIGline);
             BIG_XXX_doutput(dbig);
             printf("\n");
@@ -374,7 +373,7 @@ int main(int argc, char** argv)
         {
             len = strlen(FPline);
             linePtr = line + len;
-            read_BIG(big,linePtr);
+            read_BIG_XXX(big,linePtr);
             FP_YYY_nres(&fp,big);
             printf("%s",FPline);
             FP_YYY_output(&fp);
@@ -388,7 +387,7 @@ int main(int argc, char** argv)
         {
             len = strlen(FP2line);
             linePtr = line + len;
-            read_FP2(&fp2,linePtr);
+            read_FP2_YYY(&fp2,linePtr);
             printf("%s",FP2line);
             FP2_YYY_output(&fp2);
             printf("\n");
@@ -401,7 +400,7 @@ int main(int argc, char** argv)
         {
             len = strlen(FP4line);
             linePtr = line + len;
-            read_FP4(&fp4,linePtr);
+            read_FP4_YYY(&fp4,linePtr);
             printf("%s",FP4line);
             FP4_YYY_output(&fp4);
             printf("\n");
@@ -410,21 +409,11 @@ int main(int argc, char** argv)
             printf("\n");
             done = 1;
         }
-        if (!strncmp(line,  FP12line, strlen(FP12line)))
-        {
-            len = strlen(FP12line);
-            linePtr = line + len;
-            read_FP12(&fp12,linePtr);
-            printf("%s",FP12line);
-            FP12_YYY_output(&fp12);
-            printf("\n");
-            done = 1;
-        }
         if (!strncmp(line,  ECPline, strlen(ECPline)))
         {
             len = strlen(ECPline);
             linePtr = line + len;
-            read_ECP(&ecp,linePtr);
+            read_ECP_ZZZ(&ecp,linePtr);
             printf("%s",ECPline);
             ECP_ZZZ_output(&ecp);
             printf("%s",ECPxyzline);
@@ -443,11 +432,22 @@ int main(int argc, char** argv)
             ECP_ZZZ_rawoutput(&ecpinf);
             done = 1;
         }
+#if CURVE_SECURITY_ZZZ == 128
+        if (!strncmp(line,  FP12line, strlen(FP12line)))
+        {
+            len = strlen(FP12line);
+            linePtr = line + len;
+            read_FP12_YYY(&fp12,linePtr);
+            printf("%s",FP12line);
+            FP12_YYY_output(&fp12);
+            printf("\n");
+            done = 1;
+        }
         if (!strncmp(line,  ECP2line, strlen(ECP2line)))
         {
             len = strlen(ECP2line);
             linePtr = line + len;
-            read_ECP2(&ecp2,linePtr);
+            read_ECP2_ZZZ(&ecp2,linePtr);
             printf("%s",ECP2line);
             ECP2_ZZZ_output(&ecp2);
             printf("%s",ECP2xyzline);
@@ -460,6 +460,44 @@ int main(int argc, char** argv)
             ECP2_ZZZ_outputxyz(&ecp2inf);
             done = 1;
         }
+#elif CURVE_SECURITY_ZZZ == 192
+        if (!strncmp(line,  FP8line, strlen(FP8line)))
+        {
+            len = strlen(FP8line);
+            linePtr = line + len;
+            read_FP8_YYY(&fp8,linePtr);
+            printf("%s",FP8line);
+            FP8_YYY_output(&fp8);
+            printf("\n");
+            printf("%s",FP8rawline);
+            FP8_YYY_rawoutput(&fp8);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FP24line, strlen(FP24line)))
+        {
+            len = strlen(FP24line);
+            linePtr = line + len;
+            read_FP24_YYY(&fp24,linePtr);
+            printf("%s",FP24line);
+            FP24_YYY_output(&fp24);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECP4line, strlen(ECP4line)))
+        {
+            len = strlen(ECP4line);
+            linePtr = line + len;
+            read_ECP4_ZZZ(&ecp4,linePtr);
+            printf("%s",ECP4line);
+            ECP4_ZZZ_output(&ecp4);
+            FP4_YYY_add(&fp4aux,&ecp4.x,&ecp4.y);
+            ECP4_ZZZ_set(&ecp4inf,&fp4aux,&fp4aux);
+            printf("%s",ECP4infline);
+            ECP4_ZZZ_output(&ecp4inf);
+            done = 1;
+        }
+#endif
         if (!strncmp(line,  OCTline, strlen(OCTline)))
         {
             len = strlen(OCTline);
@@ -486,11 +524,18 @@ int main(int argc, char** argv)
                 !strncmp(line, ECPinfxyzline, strlen(ECPinfxyzline))||
                 !strncmp(line, ECPinfrawline, strlen(ECPinfrawline))||
                 !strncmp(line, FP2rawline, strlen(FP2rawline))||
-                !strncmp(line, FP4rawline, strlen(FP4rawline))||
-                !strncmp(line, ECP2xyzline, strlen(ECP2xyzline))||
+                !strncmp(line, FP4rawline, strlen(FP4rawline)))
+            done=1;
+#if CURVE_SECURITY_ZZZ == 128
+        if (!strncmp(line, ECP2xyzline, strlen(ECP2xyzline))||
                 !strncmp(line, ECP2infline, strlen(ECP2infline))||
                 !strncmp(line, ECP2infxyzline, strlen(ECP2infxyzline)))
             done=1;
+#elif CURVE_SECURITY_ZZZ == 192
+        if (!strncmp(line, FP8rawline, strlen(FP8rawline))||
+                !strncmp(line, ECP4infline, strlen(ECP4infline)))
+            done=1;
+#endif
         if(!done)
             printf("%s",line);
     }

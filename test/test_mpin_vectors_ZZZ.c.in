@@ -24,12 +24,24 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include "mpin_ZZZ.h"
+#include <string.h>
+#include "config_curve_ZZZ.h"
 #include "pbc_support.h"
-#include "amcl.h"
+#include "randapi.h"
 #include "utils.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "mpin_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "mpin192_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*PFS_ZZZ
+#endif
+#define GTLEN 3*G2LEN
 
 #define LINE_LEN 1000
 
@@ -68,10 +80,10 @@ int main(int argc, char** argv)
     char ms2[PFS_ZZZ];
     octet MS2= {0,sizeof(ms2),ms2};
     const char* MS2line = "MS2 = ";
-    char ss1[4*PFS_ZZZ], rtss1[4*PFS_ZZZ];
+    char ss1[G2LEN], rtss1[G2LEN];
     octet SS1= {0,sizeof(ss1),ss1}, rtSS1= {0,sizeof(rtss1),rtss1};
     const char* SS1line = "SS1 = ";
-    char ss2[4*PFS_ZZZ], rtss2[4*PFS_ZZZ];
+    char ss2[G2LEN], rtss2[G2LEN];
     octet SS2= {0,sizeof(ss2),ss2}, rtSS2= {0,sizeof(rtss2),rtss2};
     const char* SS2line = "SS2 = ";
     int DATE = 0;
@@ -80,7 +92,7 @@ int main(int argc, char** argv)
     const char* PIN1line = "PIN1 = ";
     int PIN2 = 0;
     const char* PIN2line = "PIN2 = ";
-    char server_secret[4*PFS_ZZZ], rt_server_secret[4*PFS_ZZZ];
+    char server_secret[G2LEN], rt_server_secret[G2LEN];
     octet SERVER_SECRET= {0,sizeof(server_secret),server_secret}, rtSERVER_SECRET= {0,sizeof(rt_server_secret),rt_server_secret};
     const char* SERVER_SECRETline = "SERVER_SECRET = ";
     char tp1[2*PFS_ZZZ+1], rttp1[2*PFS_ZZZ+1];
@@ -132,9 +144,9 @@ int main(int argc, char** argv)
     const char* SECline = "SEC = ";
     char hid[2*PFS_ZZZ+1], htid[2*PFS_ZZZ+1];
     octet HID= {0,sizeof(hid), hid}, HTID= {0,sizeof(htid),htid};
-    char e[12*PFS_ZZZ];
+    char e[GTLEN];
     octet E= {0,sizeof(e),e};
-    char f[12*PFS_ZZZ];
+    char f[GTLEN];
     octet F= {0,sizeof(f),f};
 
     fp = fopen(argv[1], "r");

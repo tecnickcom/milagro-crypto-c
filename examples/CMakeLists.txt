@@ -20,6 +20,7 @@ cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 foreach(curve ${AMCL_CURVE})
   amcl_curve_field(PF "${curve}")
   amcl_curve_field(TC "${curve}")
+  amcl_curve_field(CS "${curve}")
 
   amcl_configure_file_curve(testecdh_ZZZ.c.in testecdh_${TC}.c "${curve}" testecdh_${TC}_GEN_SRCS)
   add_executable(testecdh_${TC} ${testecdh_${TC}_GEN_SRCS})

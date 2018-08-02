@@ -26,20 +26,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pair_ZZZ.h"
 #include "randapi.h"
+#include "config_curve_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "pair_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "pair192_ZZZ.h"
+#endif
 
 #define N_ITER 16
 
+// Renamings for multiple security level support
+#if CURVE_SECURITY_ZZZ == 128
+#define ECPG2_ZZZ_generator ECP2_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP2_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP2_ZZZ_mul
+#define ECPG2_ZZZ_add ECP2_ZZZ_add
+#define ECPG2_ZZZ_affine ECP2_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP2_ZZZ_isinf
+#define GT_ZZZ_equals FP12_YYY_equals
+#define GT_ZZZ_mul FP12_YYY_mul
+#elif CURVE_SECURITY_ZZZ == 192
+#define ECPG2_ZZZ_generator ECP4_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP4_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP4_ZZZ_mul
+#define ECPG2_ZZZ_add ECP4_ZZZ_add
+#define ECPG2_ZZZ_affine ECP4_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP4_ZZZ_isinf
+#define GT_ZZZ_equals FP24_YYY_equals
+#define GT_ZZZ_mul FP24_YYY_mul
+#endif
+
 int main()
 {
-
     int i;
     BIG_XXX s,r,x,y;
     ECP_ZZZ G,P1,P2,P3;
+
+#if CURVE_SECURITY_ZZZ == 128
     ECP2_ZZZ W,Q1,Q2,Q3;
     FP12_YYY g1,g2;
-    FP2_YYY wx,wy;
+#elif CURVE_SECURITY_ZZZ == 192
+    ECP4_ZZZ W,Q1,Q2,Q3;
+    FP24_YYY g1,g2;
+#endif
 
     char seed[100] = {0};
     octet SEED = {0,sizeof(seed),seed};
@@ -53,26 +83,10 @@ int main()
     CREATE_CSPRNG(&RNG,&SEED);
 
     // Set Generator of G1
-    BIG_XXX_rcopy(x,CURVE_Gx_ZZZ);
-    BIG_XXX_rcopy(y,CURVE_Gy_ZZZ);
-    ECP_ZZZ_set(&G,x,y);
-    if (ECP_ZZZ_isinf(&G))
-    {
-        printf("Failed to set - point not on curve\n");
-        return 1;
-    }
+    ECP_ZZZ_generator(&G);
 
     // Set Generator of G2
-    FP_YYY_rcopy(&(wx.a),CURVE_Pxa_ZZZ);
-    FP_YYY_rcopy(&(wx.b),CURVE_Pxb_ZZZ);
-    FP_YYY_rcopy(&(wy.a),CURVE_Pya_ZZZ);
-    FP_YYY_rcopy(&(wy.b),CURVE_Pyb_ZZZ);
-    ECP2_ZZZ_set(&W,&wx,&wy);
-    if (ECP2_ZZZ_isinf(&W))
-    {
-        printf("Failed to set - point not on curve\n");
-        return 1;
-    }
+    ECPG2_ZZZ_generator(&W);
 
     // Check that scalar multiplication by curve order gives the infinte point
     BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
@@ -85,10 +99,10 @@ int main()
     }
 
     BIG_XXX_randomnum(s,r,&RNG);
-    ECP2_ZZZ_copy(&Q1,&W);
-    ECP2_ZZZ_mul(&Q1,r);
+    ECPG2_ZZZ_copy(&Q1,&W);
+    ECPG2_ZZZ_mul(&Q1,r);
 
-    if (!ECP2_ZZZ_isinf(&Q1))
+    if (!ECPG2_ZZZ_isinf(&Q1))
     {
         printf("FAILURE - rQ!=O\n");
         return 0;
@@ -104,19 +118,19 @@ int main()
 
         // Pick a random point in G2
         BIG_XXX_randomnum(y,r,&RNG);
-        ECP2_ZZZ_copy(&Q1,&W);
-        ECP2_ZZZ_mul(&Q1,y);
-        ECP2_ZZZ_copy(&Q2,&Q1);
+        ECPG2_ZZZ_copy(&Q1,&W);
+        ECPG2_ZZZ_mul(&Q1,y);
+        ECPG2_ZZZ_copy(&Q2,&Q1);
 
         // Test that e(sQ,P) = e(Q,sP) = e(Q,P)^s, s random
         BIG_XXX_randomnum(s,r,&RNG);
         PAIR_ZZZ_G1mul(&P2,s);
-        ECP2_ZZZ_mul(&Q2,s);
+        ECPG2_ZZZ_mul(&Q2,s);
         PAIR_ZZZ_ate(&g1,&Q1,&P2);
         PAIR_ZZZ_fexp(&g1);
         PAIR_ZZZ_ate(&g2,&Q2,&P1);
         PAIR_ZZZ_fexp(&g2);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_ZZZ_equals(&g1,&g2))
         {
             printf("FAILURE - e(sQ,P)!=e(Q,sP)\n");
             return 1;
@@ -124,7 +138,7 @@ int main()
         PAIR_ZZZ_ate(&g2,&Q1,&P1);
         PAIR_ZZZ_fexp(&g2);
         PAIR_ZZZ_GTpow(&g2,s);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_ZZZ_equals(&g1,&g2))
         {
             printf("FAILURE - e(sQ,P)!=e(Q,P)^s\n");
             return 1;
@@ -135,13 +149,13 @@ int main()
         PAIR_ZZZ_fexp(&g1);
         PAIR_ZZZ_ate(&g2,&Q1,&P2);
         PAIR_ZZZ_fexp(&g2);
-        FP12_YYY_mul(&g1,&g2);
+        GT_YYY_mul(&g1,&g2);
         ECP_ZZZ_copy(&P3,&P1);
         ECP_ZZZ_add(&P3,&P2);
         ECP_ZZZ_affine(&P3);
         PAIR_ZZZ_ate(&g2,&Q1,&P3);
         PAIR_ZZZ_fexp(&g2);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_YYY_equals(&g1,&g2))
         {
             printf("FAILURE - e(Q,P1+P2)!=e(Q,P1).e(Q,P2)\n");
             return 1;
@@ -150,7 +164,7 @@ int main()
         // Test double_ate function on G1
         PAIR_ZZZ_double_ate(&g1,&Q1,&P1,&Q1,&P2);
         PAIR_ZZZ_fexp(&g1);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_YYY_equals(&g1,&g2))
         {
             printf("FAILURE - double ate failed\n");
             return 1;
@@ -161,13 +175,13 @@ int main()
         PAIR_ZZZ_fexp(&g1);
         PAIR_ZZZ_ate(&g2,&Q2,&P1);
         PAIR_ZZZ_fexp(&g2);
-        FP12_YYY_mul(&g1,&g2);
-        ECP2_ZZZ_copy(&Q3,&Q1);
-        ECP2_ZZZ_add(&Q3,&Q2);
-        ECP2_ZZZ_affine(&Q3);
+        GT_YYY_mul(&g1,&g2);
+        ECPG2_ZZZ_copy(&Q3,&Q1);
+        ECPG2_ZZZ_add(&Q3,&Q2);
+        ECPG2_ZZZ_affine(&Q3);
         PAIR_ZZZ_ate(&g2,&Q3,&P1);
         PAIR_ZZZ_fexp(&g2);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_YYY_equals(&g1,&g2))
         {
             printf("FAILURE - e(Q1+Q2,P1)!=e(Q1,P1).e(Q2,P1)\n");
             return 1;
@@ -176,7 +190,7 @@ int main()
         // Test double_ate function on G2
         PAIR_ZZZ_double_ate(&g1,&Q1,&P1,&Q2,&P1);
         PAIR_ZZZ_fexp(&g1);
-        if (!FP12_YYY_equals(&g1,&g2))
+        if (!GT_YYY_equals(&g1,&g2))
         {
             printf("FAILURE - double ate failed\n");
             return 1;

@@ -22,8 +22,20 @@ under the License.
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "mpin_ZZZ.h"
+#include "config_curve_ZZZ.h"
 #include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "mpin_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "mpin192_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*PFS_ZZZ
+#endif
+#define GTLEN 3*G2LEN
 
 #define MIN_TIME 10.0
 #define MIN_ITERS 10
@@ -32,11 +44,11 @@ int mpin(csprng *RNG)
 {
     int pin,rtn;
     int date=0;
-    char x[PGS_ZZZ],s[PGS_ZZZ],y[PGS_ZZZ],client_id[100],sst[4*PFS_ZZZ],token[2*PFS_ZZZ+1],sec[2*PFS_ZZZ+1],permit[2*PFS_ZZZ+1],xcid[2*PFS_ZZZ+1],xid[2*PFS_ZZZ+1],e[12*PFS_ZZZ],f[12*PFS_ZZZ];
+    char x[PGS_ZZZ],s[PGS_ZZZ],y[PGS_ZZZ],client_id[100],sst[G2LEN],token[2*PFS_ZZZ+1],sec[2*PFS_ZZZ+1],permit[2*PFS_ZZZ+1],xcid[2*PFS_ZZZ+1],xid[2*PFS_ZZZ+1],e[GTLEN],f[GTLEN];
     char hcid[PFS_ZZZ],hsid[PFS_ZZZ],hid[2*PFS_ZZZ+1],htid[2*PFS_ZZZ+1],h[PGS_ZZZ];
     char r[PGS_ZZZ],z[2*PFS_ZZZ+1],w[PGS_ZZZ],t[2*PFS_ZZZ+1];
-    char g1[12*PFS_ZZZ],g2[12*PFS_ZZZ];
-    char ck[MPIN_PAS],sk[MPIN_PAS];
+    char g1[GTLEN],g2[GTLEN];
+    char ck[AESKEY_ZZZ],sk[AESKEY_ZZZ];
     octet S= {0,sizeof(s),s};
     octet X= {0,sizeof(x),x};
     octet Y= {0,sizeof(y),y};
