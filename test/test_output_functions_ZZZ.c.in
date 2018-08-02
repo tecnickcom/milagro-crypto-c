@@ -42,6 +42,11 @@
 #include "fp8_YYY.h"
 #include "fp24_YYY.h"
 #include "ecp4_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "fp8_YYY.h"
+#include "fp16_YYY.h"
+#include "fp48_YYY.h"
+#include "ecp8_ZZZ.h"
 #endif
 
 extern int dup(int oldfd);
@@ -53,6 +58,8 @@ extern int fileno(FILE *stream);
 #define LINE_LEN 2000
 #elif CURVE_SECURITY_ZZZ == 192
 #define LINE_LEN 4000
+#elif CURVE_SECURITY_ZZZ == 256
+#define LINE_LEN 8000
 #endif
 
 
@@ -207,7 +214,7 @@ int read_ECP2_ZZZ(ECP2_ZZZ *ecp2, char* stringx)
 
     return ECP2_ZZZ_set(ecp2,&x,&y);
 }
-#elif CURVE_SECURITY_ZZZ == 192
+#else
 void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
 {
     char *stringy;
@@ -221,6 +228,7 @@ void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
 
     FP8_YYY_from_FP4s(fp8,&x,&y);
 }
+#if CURVE_SECURITY_ZZZ == 192
 void read_FP24_YYY(FP24_YYY *fp24, char *stringx)
 {
     char *stringy, *stringz;
@@ -250,6 +258,48 @@ int read_ECP4_ZZZ(ECP4_ZZZ *ecp4, char* stringx)
 
     return ECP4_ZZZ_set(ecp4,&x,&y);
 }
+#elif CURVE_SECURITY_ZZZ == 256
+void read_FP16_YYY(FP16_YYY *fp16, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    FP16_YYY_from_FP8s(fp16,&x,&y);
+}
+void read_FP48_YYY(FP48_YYY *fp48, char *stringx)
+{
+    char *stringy, *stringz;
+    FP16_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,15);
+    stringz = skip_cb(stringy++,15);
+    skip_cb(stringz++,15);
+
+    read_FP16_YYY(&x,stringx);
+    read_FP16_YYY(&y,stringy);
+    read_FP16_YYY(&z,stringz);
+
+    FP48_YYY_from_FP16s(fp48,&x,&y,&z);
+}
+int read_ECP8_ZZZ(ECP8_ZZZ *ecp8, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    return ECP8_ZZZ_set(ecp8,&x,&y);
+}
+#endif
 #endif
 
 void read_OCT(octet *oct, char* string, int len)
@@ -307,10 +357,11 @@ int main(int argc, char** argv)
     const char* ECP2xyzline = "ECP2xyz = ";
     const char* ECP2infline = "ECP2inf = ";
     const char* ECP2infxyzline = "ECP2infxyz = ";
-#elif CURVE_SECURITY_ZZZ == 192
+#else
     FP8_YYY fp8;
     const char* FP8line = "FP8 = ";
     const char* FP8rawline = "FP8raw = ";
+#if CURVE_SECURITY_ZZZ == 192
     FP24_YYY fp24;
     const char* FP24line = "FP24 = ";
     FP4_YYY fp4aux;
@@ -318,6 +369,18 @@ int main(int argc, char** argv)
     ECP4_ZZZ ecp4inf;
     const char* ECP4line = "ECP4 = ";
     const char* ECP4infline = "ECP4inf = ";
+#elif CURVE_SECURITY_ZZZ == 256
+    FP16_YYY fp16;
+    const char* FP16line = "FP16 = ";
+    const char* FP16rawline = "FP16raw = ";
+    FP48_YYY fp48;
+    const char* FP48line = "FP48 = ";
+    FP8_YYY fp8aux;
+    ECP8_ZZZ ecp8;
+    ECP8_ZZZ ecp8inf;
+    const char* ECP8line = "ECP8 = ";
+    const char* ECP8infline = "ECP8inf = ";
+#endif
 #endif
     char octbuf[LINE_LEN];
     octet oct = {0,sizeof(octbuf),octbuf};
@@ -460,7 +523,7 @@ int main(int argc, char** argv)
             ECP2_ZZZ_outputxyz(&ecp2inf);
             done = 1;
         }
-#elif CURVE_SECURITY_ZZZ == 192
+#else
         if (!strncmp(line,  FP8line, strlen(FP8line)))
         {
             len = strlen(FP8line);
@@ -474,6 +537,7 @@ int main(int argc, char** argv)
             printf("\n");
             done = 1;
         }
+#if CURVE_SECURITY_ZZZ == 192
         if (!strncmp(line,  FP24line, strlen(FP24line)))
         {
             len = strlen(FP24line);
@@ -497,6 +561,44 @@ int main(int argc, char** argv)
             ECP4_ZZZ_output(&ecp4inf);
             done = 1;
         }
+#elif CURVE_SECURITY_ZZZ == 256
+        if (!strncmp(line,  FP16line, strlen(FP16line)))
+        {
+            len = strlen(FP16line);
+            linePtr = line + len;
+            read_FP16_YYY(&fp16,linePtr);
+            printf("%s",FP16line);
+            FP16_YYY_output(&fp16);
+            printf("\n");
+            printf("%s",FP16rawline);
+            FP16_YYY_rawoutput(&fp16);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FP48line, strlen(FP48line)))
+        {
+            len = strlen(FP48line);
+            linePtr = line + len;
+            read_FP48_YYY(&fp48,linePtr);
+            printf("%s",FP48line);
+            FP48_YYY_output(&fp48);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECP8line, strlen(ECP8line)))
+        {
+            len = strlen(ECP8line);
+            linePtr = line + len;
+            read_ECP8_ZZZ(&ecp8,linePtr);
+            printf("%s",ECP8line);
+            ECP8_ZZZ_output(&ecp8);
+            FP8_YYY_add(&fp8aux,&ecp8.x,&ecp8.y);
+            ECP8_ZZZ_set(&ecp8inf,&fp8aux,&fp8aux);
+            printf("%s",ECP8infline);
+            ECP8_ZZZ_output(&ecp8inf);
+            done = 1;
+        }
+#endif
 #endif
         if (!strncmp(line,  OCTline, strlen(OCTline)))
         {
@@ -534,6 +636,11 @@ int main(int argc, char** argv)
 #elif CURVE_SECURITY_ZZZ == 192
         if (!strncmp(line, FP8rawline, strlen(FP8rawline))||
                 !strncmp(line, ECP4infline, strlen(ECP4infline)))
+            done=1;
+#elif CURVE_SECURITY_ZZZ == 256
+        if (!strncmp(line, FP8rawline, strlen(FP8rawline))||
+                !strncmp(line, FP16rawline, strlen(FP16rawline))||
+                !strncmp(line, ECP8infline, strlen(ECP8infline)))
             done=1;
 #endif
         if(!done)
