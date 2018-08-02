@@ -26,28 +26,26 @@ foreach(curve ${AMCL_CURVE})
   add_executable(testecdh_${TC} ${testecdh_${TC}_GEN_SRCS})
   target_link_libraries(testecdh_${TC} PRIVATE amcl_curve_${TC})
 
-  if(NOT (CS STREQUAL "256"))
-    if(TARGET amcl_mpin_${TC})
-      amcl_configure_file_curve(testmpin_ZZZ.c.in testmpin_${TC}.c "${curve}" testmpin_${TC}_GEN_SRCS)
-      add_executable(testmpin_${TC} ${testmpin_${TC}_GEN_SRCS})
-      target_link_libraries(testmpin_${TC} PRIVATE amcl_mpin_${TC})
+  if(TARGET amcl_mpin_${TC})
+    amcl_configure_file_curve(testmpin_ZZZ.c.in testmpin_${TC}.c "${curve}" testmpin_${TC}_GEN_SRCS)
+    add_executable(testmpin_${TC} ${testmpin_${TC}_GEN_SRCS})
+    target_link_libraries(testmpin_${TC} PRIVATE amcl_mpin_${TC})
 
-      amcl_configure_file_curve(testdvs_ZZZ.c.in testdvs_${TC}.c "${curve}" testdvs_${TC}_GEN_SRCS)
-      add_executable(testdvs_${TC} ${testdvs_${TC}_GEN_SRCS})
-      target_link_libraries(testdvs_${TC} PRIVATE amcl_mpin_${TC})
-    endif()
-
-    if(TARGET amcl_wcc_${TC})
-      amcl_configure_file_curve(testwcc_ZZZ.c.in testwcc_${TC}.c "${curve}" testwcc_${TC}_GEN_SRCS)
-      add_executable(testwcc_${TC} ${testwcc_${TC}_GEN_SRCS})
-      target_link_libraries(testwcc_${TC} PRIVATE amcl_wcc_${TC})
-
-      amcl_configure_file_curve(testwcc_dta_ZZZ.c.in testwcc_dta_${TC}.c "${curve}" testwcc_dta_${TC}_GEN_SRCS)
-      add_executable(testwcc_dta_${TC} ${testwcc_dta_${TC}_GEN_SRCS})
-      target_link_libraries(testwcc_dta_${TC} PRIVATE amcl_wcc_${TC})
-    endif()
+    amcl_configure_file_curve(testdvs_ZZZ.c.in testdvs_${TC}.c "${curve}" testdvs_${TC}_GEN_SRCS)
+    add_executable(testdvs_${TC} ${testdvs_${TC}_GEN_SRCS})
+    target_link_libraries(testdvs_${TC} PRIVATE amcl_mpin_${TC})
   endif()
-  
+
+  if(TARGET amcl_wcc_${TC} AND NOT (CS STREQUAL "256"))
+    amcl_configure_file_curve(testwcc_ZZZ.c.in testwcc_${TC}.c "${curve}" testwcc_${TC}_GEN_SRCS)
+    add_executable(testwcc_${TC} ${testwcc_${TC}_GEN_SRCS})
+    target_link_libraries(testwcc_${TC} PRIVATE amcl_wcc_${TC})
+
+    amcl_configure_file_curve(testwcc_dta_ZZZ.c.in testwcc_dta_${TC}.c "${curve}" testwcc_dta_${TC}_GEN_SRCS)
+    add_executable(testwcc_dta_${TC} ${testwcc_dta_${TC}_GEN_SRCS})
+    target_link_libraries(testwcc_dta_${TC} PRIVATE amcl_wcc_${TC})
+  endif()
+
 endforeach()
 
 foreach(level ${AMCL_RSA})

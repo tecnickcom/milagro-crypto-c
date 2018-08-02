@@ -31,6 +31,8 @@
 #include "pair_ZZZ.h"
 #elif CURVE_SECURITY_ZZZ == 192
 #include "pair192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "pair256_ZZZ.h"
 #endif
 
 #define N_ITER 16
@@ -56,6 +58,16 @@
 #define GT_ZZZ_isunity FP24_YYY_isunity
 #define GT_ZZZ_equals FP24_YYY_equals
 #define GT_ZZZ_compow FP24_YYY_compow
+#elif CURVE_SECURITY_ZZZ == 256
+#define ECPG2_ZZZ_generator ECP8_ZZZ_generator
+#define ECPG2_ZZZ_set ECP8_ZZZ_set
+#define ECPG2_ZZZ_copy ECP8_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP8_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP8_ZZZ_isinf
+#define GT_ZZZ_copy FP48_YYY_copy
+#define GT_ZZZ_isunity FP48_YYY_isunity
+#define GT_ZZZ_equals FP48_YYY_equals
+#define GT_ZZZ_compow FP48_YYY_compow
 #endif
 
 #define MIN_TIME 10.0
@@ -101,6 +113,10 @@ int main()
     ECP4_ZZZ Q,W;
     FP24_YYY g,w;
     FP8_YYY cm;
+#elif CURVE_SECURITY_ZZZ == 256
+    ECP8_ZZZ Q,W;
+    FP48_YYY g,w;
+    FP16_YYY cm;
 #endif
 
     BIG_XXX s,r;
