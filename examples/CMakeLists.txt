@@ -36,7 +36,7 @@ foreach(curve ${AMCL_CURVE})
     target_link_libraries(testdvs_${TC} PRIVATE amcl_mpin_${TC})
   endif()
 
-  if(TARGET amcl_wcc_${TC} AND NOT (CS STREQUAL "256"))
+  if(TARGET amcl_wcc_${TC})
     amcl_configure_file_curve(testwcc_ZZZ.c.in testwcc_${TC}.c "${curve}" testwcc_${TC}_GEN_SRCS)
     add_executable(testwcc_${TC} ${testwcc_${TC}_GEN_SRCS})
     target_link_libraries(testwcc_${TC} PRIVATE amcl_wcc_${TC})

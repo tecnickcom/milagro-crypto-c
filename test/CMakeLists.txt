@@ -193,7 +193,7 @@ foreach(curve ${AMCL_CURVE})
     ################################################
     # WCC Tests
     ################################################
-    if(BUILD_WCC AND NOT (CS STREQUAL "256"))
+    if(BUILD_WCC)
       amcl_curve_test(${curve} test_wcc_${TC} test_wcc_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_random_${TC} test_wcc_random_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_wcc_invalid_points_${TC} test_wcc_invalid_points_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
