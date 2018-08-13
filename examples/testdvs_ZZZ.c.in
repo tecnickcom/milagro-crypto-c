@@ -41,6 +41,8 @@
 #include "mpin_ZZZ.h"
 #elif CURVE_SECURITY_ZZZ == 192
 #include "mpin192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "mpin256_ZZZ.h"
 #endif
 
 // Support multiple security levels
@@ -48,6 +50,8 @@
 #define G2LEN 4*PFS_ZZZ
 #elif CURVE_SECURITY_ZZZ == 192
 #define G2LEN 8*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*PFS_ZZZ
 #endif
 
 int main()

@@ -45,7 +45,7 @@ foreach(curve ${AMCL_CURVE})
     add_executable(testwcc_dta_${TC} ${testwcc_dta_${TC}_GEN_SRCS})
     target_link_libraries(testwcc_dta_${TC} PRIVATE amcl_wcc_${TC})
   endif()
-  
+
 endforeach()
 
 foreach(level ${AMCL_RSA})

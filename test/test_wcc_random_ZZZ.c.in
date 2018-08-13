@@ -37,14 +37,17 @@
 #include "wcc_ZZZ.h"
 #elif CURVE_SECURITY_ZZZ == 192
 #include "wcc192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "wcc256_ZZZ.h"
 #endif
 
 #if CURVE_SECURITY_ZZZ == 128
 #define G2LEN 4*WCC_PFS_ZZZ
 #elif CURVE_SECURITY_ZZZ == 192
 #define G2LEN 8*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*WCC_PFS_ZZZ
 #endif
-
 // #define DEBUG
 
 void rand_str(octet* dest, csprng *RNG)

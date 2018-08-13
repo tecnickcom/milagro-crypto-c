@@ -591,10 +591,6 @@ int main(int argc, char** argv)
             read_FP4_YYY(&FP4div2i,linePtr);
             FP4_YYY_copy(&FP4aux1,&FP4_1);
             FP4_YYY_div_2i(&FP4aux1);
-            FP4_YYY_output(&FP4div2i);
-            printf("\n");
-            FP4_YYY_output(&FP4aux1);
-            printf("\n");
             if(!FP4_YYY_equals(&FP4aux1,&FP4div2i))
             {
                 printf("ERROR dividing FP4 by sqrt(1+sqrt(-1))/2, line %d\n",i);
