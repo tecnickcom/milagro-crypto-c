@@ -170,7 +170,7 @@ endif()
 ### PBC ###
 if(BUILD_MPIN OR BUILD_WCC)
   set(PBC_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN/WCC time permits")
-  set(PBC_RANDOM_TESTS 10 CACHE STRING "Number of random M-PIN/WCC tests")
+  set(PBC_RANDOM_TESTS 5 CACHE STRING "Number of random M-PIN/WCC tests")
   log(PBC_TIME_PERMIT_TESTS)
   log(PBC_RANDOM_TESTS)
 endif()

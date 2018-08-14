@@ -606,8 +606,6 @@ int main(int argc, char** argv)
 
     // Sqrt of 0
     FP4_YYY_zero(&FP4aux1);
-    FP4_YYY_output(&FP4aux1);
-    printf("\n");
 
     if(!(FP4_YYY_sqrt(&FP4aux1,&FP4aux1) && FP4_YYY_iszilch(&FP4aux1)))
     {

@@ -529,10 +529,6 @@ int main(int argc, char** argv)
             FP4_YYY_norm(&FP4aux1);
             if(!FP4_YYY_equals(&FP4aux1,&FP12compows))
             {
-                FP4_YYY_output(&FP4aux1);
-                printf("\n\n");
-                FP4_YYY_output(&FP12compows);
-                printf("\n\n");
                 printf("ERROR testing function FP12_compow with small integer, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
