@@ -61,7 +61,7 @@ int main()
     octet SEED = {0,sizeof(seed),seed};
     csprng RNG;
 
-    /* unrandom seed value! */
+    /* non random seed value! */
     SEED.len=32;
     for (i=0; i<32; i++)
         SEED.val[i]=i+1;

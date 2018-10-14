@@ -1,6 +1,6 @@
-#Choice: 384W, Type: WEIERSTRASS
-#Modulus:=0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec3;
-#A:= -3; B:=0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff77bb; #PIN:=1234
+# Choice: 384W, Type: WEIERSTRASS
+# Modulus:=0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec3;
+# A:= -3; B:=0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff77bb;
 
 #test1
 ECP1 = AFC7E772DB4931B56B67760E0B04B8FE70203DF9BC82849CF46E4F5ECFB83F72F3AB069C751EF0350F2D32F4CB0CBEC0:FBFC097CE6755DBDCBABA73729FE48A0FD2A827AAD91EC67ED7374B9A37303321D00FBF73F37E3994005832CF3D1BF2D

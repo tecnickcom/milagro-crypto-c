@@ -20,7 +20,6 @@ under the License.
 /**
  * @file pbc_support.h
  * @author Mike Scott
- * @date January 2017
  * @brief Auxiliary functions for Pairing-based protocols
  *
  *

@@ -9,7 +9,7 @@
 
  For a detailed explanation about this library please read: <a href="AMCL.pdf">AMCL.pdf</a>
 
- AMCL is provided in *C* language but includes a <a href="https://www.python.org">Python</a> and <a href="https://golang.org">GO</a> wrapper.
+ AMCL is provided in *C* language but includes a <a href="https://www.python.org">Python</a> wrapper.for some components as an aid for development work.
 
   \section homepage Project page
   The official project page is hosted at 
@@ -48,9 +48,9 @@ under the License.
 
   \section downloads Downloads
 
-  The source code is available from the mirror of the Apache GIT repository:
+  The source code is available from here;
 
-  git mirror https://github.com/apache/incubator-milagro
+  git clone https://github.com/milagro-crypto/milagro-crypto-c
 
   \section installonmainpage Installation
  
@@ -73,8 +73,7 @@ the operating system package manager.
 
 If not, then you can download it from www.cmake.org
 
-In order to use the language wrappers install <a href="https://www.python.org">GO</a> and 
- <a href="https://golang.org/dl/">GO</a> if required.
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a>
 
 The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
 is also required if you wish to use the Python module.
@@ -96,7 +95,7 @@ the library in a docker container.</p>
 
 <h2>Manual build</h2>
 
-<p>The default build is for 64 bit machines, Elliptic curve BN_254_CX and curve type Weierstrass</p>
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
 
 <ol type="disc">
   <li>mkdir target/build</li>
@@ -157,8 +156,7 @@ Install  <a href="http://www.cmake.org/download/">cmake</a>
   <li>brew install cmake</li>
 </ul>
 
-In order to use the language wrappers install <a href="https://www.python.org">GO</a> and 
- <a href="https://golang.org/dl/">GO</a> if required.
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a>
 
 The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
 is also required if you wish to use the Python module.
@@ -176,7 +174,7 @@ In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxyge
 
 <h2>Build Instructions</h2>
 
-<p>The default build is for 64 bit machines, Elliptic curve BN_254_CX and curve type Weierstrass</p>
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
 
 <ol type="disc">
   <li>mkdir -p target/build</li>
@@ -215,8 +213,7 @@ to the PATH variable.</p>
 
 <p>CMake is required to build the library and can be downloaded from www.cmake.org</p>
 
-In order to use the language wrappers install <a href="https://www.python.org">GO</a> and 
- <a href="https://golang.org/dl/">GO</a> if required.
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a> 
 
 <p>The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
 is also required, if you wish to use the Python module.</p>
@@ -231,7 +228,7 @@ In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxyge
 
 <p>Start a command prompt as an administrator</p>
 
-<p>The default build is for 64 bit machines, Elliptic curve BN_254_CX and curve type Weierstrass</p>
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
 
 <ol type="disc">
   <li>mkdir target\\build</li>

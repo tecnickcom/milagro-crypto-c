@@ -1,646 +1,254 @@
-# Tests
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
-# Add the binary tree directory to the search path for linking and include files
-link_directories (${PROJECT_BINARY_DIR}/src)
-include_directories (${CMAKE_CURRENT_BINARY_DIR} ${PROJECT_BINARY_DIR}/include )
+function(amcl_test name source dependencies expected_response)
+  add_executable(${name} "${source}")
 
-#define macro to simplify adding tests
-macro (do_test arg result)
-  add_test (${arg} ${TARGET_SYSTEM_EMULATOR} ${arg}${CMAKE_EXECUTABLE_SUFFIX})
-  set_tests_properties (${arg}
-    PROPERTIES PASS_REGULAR_EXPRESSION ${result}
-    )
-endmacro ()
+  target_link_libraries(${name} PRIVATE ${dependencies})
 
-# create a smoke test
-function(SMOKE_TEST test_name test_file dependencies expected_response)
-  add_executable (${test_name} ${CMAKE_CURRENT_BINARY_DIR}/${test_file})
-  # Link the executable to the libraries
-  target_link_libraries (${test_name} ${dependencies})
-  # run test
-  do_test (${test_name} ${expected_response})
-endfunction(SMOKE_TEST)
+  add_test(NAME ${name}
+    COMMAND ${TARGET_SYSTEM_EMULATOR} $<TARGET_FILE:${name}> ${ARGN}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/testVectors
+  )
 
-# create a test with testVectors
-function(TV_TEST test_name test_file dependencies expected_response test_vector parameter)
-  # set test
-  add_executable (${test_name} ${CMAKE_CURRENT_BINARY_DIR}/${test_file})
-  # Link the executable to the libraries
-  target_link_libraries (${test_name} ${dependencies})
-  # test
-  add_test(NAME ${test_name} COMMAND ${TARGET_SYSTEM_EMULATOR} ${test_name} ${test_vector} ${parameter})
-  set_tests_properties (${test_name} PROPERTIES PASS_REGULAR_EXPRESSION ${expected_response})
-endfunction(TV_TEST)
+  set_tests_properties(${name} PROPERTIES
+    PASS_REGULAR_EXPRESSION "${expected_response}"
+  )
+endfunction()
 
-# Test octet consistency
-file (COPY test_octet_consistency.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-SMOKE_TEST ( test_octet_consistency test_octet_consistency.c amcl_core "SUCCESS")
-
-# Test version
-file (COPY test_version.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-SMOKE_TEST ( test_version test_version.c amcl_core "Version: ${AMCL_VERSION_MAJOR}.${AMCL_VERSION_MINOR}.${AMCL_VERSION_PATCH}")
-
-# Test utils
-file (COPY test_utils.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-SMOKE_TEST ( test_utils test_utils.c amcl_core "SUCCESS")
-
-# Test hash functions
-file (COPY test_hash.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-TV_TEST (test_hash_256 test_hash.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/sha/256/SHA256ShortMsg.rsp" "sha256")
-TV_TEST (test_hash_384 test_hash.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/sha/384/SHA384ShortMsg.rsp" "sha384")
-TV_TEST (test_hash_512 test_hash.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/sha/512/SHA512ShortMsg.rsp" "sha512")
-
-# Test AES-GCM
-file (COPY test_aes_encrypt.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file (COPY test_aes_decrypt.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file (COPY test_gcm_encrypt.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file (COPY test_gcm_decrypt.c DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-TV_TEST (test_gcm_encrypt_128 test_gcm_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/gcm/gcmEncryptExtIV128.rsp" "")
-TV_TEST (test_gcm_encrypt_256 test_gcm_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/gcm/gcmEncryptExtIV256.rsp" "")
-TV_TEST (test_gcm_decrypt_128 test_gcm_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/gcm/gcmDecrypt128.rsp" "")
-TV_TEST (test_gcm_decrypt_256 test_gcm_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/gcm/gcmDecrypt256.rsp" "")
-TV_TEST (test_aes_encrypt_ECB_128 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/ECBMMT128.rsp" "ECB")
-TV_TEST (test_aes_encrypt_ECB_256 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/ECBMMT256.rsp" "ECB")
-TV_TEST (test_aes_encrypt_CBC_128 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CBCMMT128.rsp" "CBC")
-TV_TEST (test_aes_encrypt_CFB1_128 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CFB8MMT128.rsp" "CFB1")
-TV_TEST (test_aes_encrypt_CBC_256 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CBCMMT256.rsp" "CBC")
-TV_TEST (test_aes_encrypt_CTR_128 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/amcl_CTRMCL128.rsp" "CTR")
-TV_TEST (test_aes_encrypt_CTR_256 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/amcl_CTRMCL256.rsp" "CTR")
-TV_TEST (test_aes_encrypt_CFB1_256 test_aes_encrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CFB8MMT256.rsp" "CFB1")
-TV_TEST (test_aes_decrypt_ECB_128 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/ECBMMT128.rsp" "ECB")
-TV_TEST (test_aes_decrypt_ECB_256 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/ECBMMT256.rsp" "ECB")
-TV_TEST (test_aes_decrypt_CBC_128 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CBCMMT128.rsp" "CBC")
-TV_TEST (test_aes_decrypt_CFB1_128 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CFB8MMT128.rsp" "CFB1")
-TV_TEST (test_aes_decrypt_CBC_256 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CBCMMT256.rsp" "CBC")
-TV_TEST (test_aes_decrypt_CTR_128 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/amcl_CTRMCL128.rsp" "CTR")
-TV_TEST (test_aes_decrypt_CTR_256 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/amcl_CTRMCL256.rsp" "CTR")
-TV_TEST (test_aes_decrypt_CFB1_256 test_aes_decrypt.c amcl_core "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/aes/CFB8MMT256.rsp" "CFB1")
-
-# create new file replacing curve dependant parameters
-function(CURVE_TESTS_SET tb tf tc nb base nbt m8 mt ct pf)
-  set(bd "${tb}_${base}")
-
-  if(NOT(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/test_big_arithmetics_${bd}.c"))
-    # test BIG arithmetics
-    file(READ "test_big_arithmetics_XXX.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_big_arithmetics_${bd}.c" "${tempc}")
-    TV_TEST ("test_big_arithmetics_${bd}" "test_big_arithmetics_${bd}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/big/test_vector_big.txt" "")
-
-    # test BIG consistency
-    file(READ "test_big_consistency_XXX.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_big_consistency_${bd}.c" "${tempc}")
-    SMOKE_TEST ("test_big_consistency_${bd}" "test_big_consistency_${bd}.c" "amcl_curve_${tc}" "SUCCESS")
+function(amcl_curve_test curve name source dependencies expected_response)
+  if(NOT TARGET ${name})
+    amcl_configure_file_curve(${source} ${name}.c ${curve} ${name}_SRC)
+    amcl_test(${name} ${${name}_SRC} "${dependencies}" "${expected_response}" ${ARGN})
   endif()
+endfunction()
 
-  if(NOT(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/test_fp_arithmetics_${tf}.c"))
-    # Arithmetics test fp
-    file(READ "test_fp_arithmetics_YYY.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_fp_arithmetics_${tf}.c" "${tempc}")
-    TV_TEST ("test_fp_arithmetics_${tf}" "test_fp_arithmetics_${tf}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/fp/test_vector_${tf}.txt" "")
-  endif(NOT(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/test_fp_arithmetics_${tf}.c"))
+function(amcl_rsa_test level name source dependencies expected_response)
+  if(NOT TARGET ${name})
+    amcl_configure_file_rsa(${source} ${name}.c ${level} ${name}_SRC)
+    amcl_test(${name} ${${name}_SRC} "${dependencies}" "${expected_response}" ${ARGN})
+  endif()
+endfunction()
 
-  if(NOT((${tc} STREQUAL "NUMS256E") OR (${tc} STREQUAL "NUMS384E") OR (${tc} STREQUAL "NUMS512E")))
-    # Arithmetics test ecp
-    file(READ "test_ecp_arithmetics_ZZZ.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecp_arithmetics_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecp_arithmetics_${tc}" "test_ecp_arithmetics_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecp/test_vector_${tc}.txt" "")
-  endif(NOT((${tc} STREQUAL "NUMS256E") OR (${tc} STREQUAL "NUMS384E") OR (${tc} STREQUAL "NUMS512E")))
+function(amcl_rsa_curve_test level curve name source dependencies expected_response)
+  if(NOT TARGET ${name})
+    amcl_configure_file_rsa_curve(${source} ${name}.c ${level} ${curve} ${name}_SRC)
+    amcl_test(${name} ${${name}_SRC} "${dependencies}" "${expected_response}" ${ARGN})
+  endif()
+endfunction()
 
-   # Arithmetics test ecc
-    file(READ "test_ecc_ZZZ.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecc_${tc}.c" "${tempc}")
-    SMOKE_TEST ("test_ecc_${tc}" "test_ecc_${tc}.c" "amcl_curve_${tc}" "SUCCESS")
+################################################
+# Basic Tests
+################################################
+amcl_test(test_octet_consistency test_octet_consistency.c amcl_core "SUCCESS")
+amcl_test(test_version test_version.c amcl_core "Version: ${AMCL_VERSION_MAJOR}.${AMCL_VERSION_MINOR}.${AMCL_VERSION_PATCH}")
+amcl_test(test_utils test_utils.c amcl_core "SUCCESS")
 
-  if(${tc} STREQUAL "NIST256")
-    # Test ecdh with curve NIST256
-    file(READ "test_ecdh_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdh_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdh_${tc}" "test_ecdh_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdh/P-256/KAS_ECC_CDH_PrimitiveTest.txt" "")
+################################################
+# Hash Tests
+################################################
+amcl_test(test_hash_256 test_hash.c amcl_core "SUCCESS" "sha/256/SHA256ShortMsg.rsp" "sha256")
+amcl_test(test_hash_384 test_hash.c amcl_core "SUCCESS" "sha/384/SHA384ShortMsg.rsp" "sha384")
+amcl_test(test_hash_512 test_hash.c amcl_core "SUCCESS" "sha/512/SHA512ShortMsg.rsp" "sha512")
 
-    # Test ecdsa keypair with curve NIST256
-    file(READ "test_ecdsa_keypair_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_keypair_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_keypair_${tc}" "test_ecdsa_keypair_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-256/KeyPair.rsp" "")
+################################################
+# AES-GCM Tests
+################################################
+amcl_test(test_gcm_encrypt_128      test_gcm_encrypt.c amcl_core "SUCCESS" "gcm/gcmEncryptExtIV128.rsp" "")
+amcl_test(test_gcm_encrypt_256      test_gcm_encrypt.c amcl_core "SUCCESS" "gcm/gcmEncryptExtIV256.rsp" "")
+amcl_test(test_gcm_decrypt_128      test_gcm_decrypt.c amcl_core "SUCCESS" "gcm/gcmDecrypt128.rsp"      "")
+amcl_test(test_gcm_decrypt_256      test_gcm_decrypt.c amcl_core "SUCCESS" "gcm/gcmDecrypt256.rsp"      "")
+amcl_test(test_aes_encrypt_ECB_128  test_aes_encrypt.c amcl_core "SUCCESS" "aes/ECBMMT128.rsp"          "ECB")
+amcl_test(test_aes_encrypt_ECB_256  test_aes_encrypt.c amcl_core "SUCCESS" "aes/ECBMMT256.rsp"          "ECB")
+amcl_test(test_aes_encrypt_CBC_128  test_aes_encrypt.c amcl_core "SUCCESS" "aes/CBCMMT128.rsp"          "CBC")
+amcl_test(test_aes_encrypt_CFB1_128 test_aes_encrypt.c amcl_core "SUCCESS" "aes/CFB8MMT128.rsp"         "CFB1")
+amcl_test(test_aes_encrypt_CBC_256  test_aes_encrypt.c amcl_core "SUCCESS" "aes/CBCMMT256.rsp"          "CBC")
+amcl_test(test_aes_encrypt_CTR_128  test_aes_encrypt.c amcl_core "SUCCESS" "aes/amcl_CTRMCL128.rsp"     "CTR")
+amcl_test(test_aes_encrypt_CTR_256  test_aes_encrypt.c amcl_core "SUCCESS" "aes/amcl_CTRMCL256.rsp"     "CTR")
+amcl_test(test_aes_encrypt_CFB1_256 test_aes_encrypt.c amcl_core "SUCCESS" "aes/CFB8MMT256.rsp"         "CFB1")
+amcl_test(test_aes_decrypt_ECB_128  test_aes_decrypt.c amcl_core "SUCCESS" "aes/ECBMMT128.rsp"          "ECB")
+amcl_test(test_aes_decrypt_ECB_256  test_aes_decrypt.c amcl_core "SUCCESS" "aes/ECBMMT256.rsp"          "ECB")
+amcl_test(test_aes_decrypt_CBC_128  test_aes_decrypt.c amcl_core "SUCCESS" "aes/CBCMMT128.rsp"          "CBC")
+amcl_test(test_aes_decrypt_CFB1_128 test_aes_decrypt.c amcl_core "SUCCESS" "aes/CFB8MMT128.rsp"         "CFB1")
+amcl_test(test_aes_decrypt_CBC_256  test_aes_decrypt.c amcl_core "SUCCESS" "aes/CBCMMT256.rsp"          "CBC")
+amcl_test(test_aes_decrypt_CTR_128  test_aes_decrypt.c amcl_core "SUCCESS" "aes/amcl_CTRMCL128.rsp"     "CTR")
+amcl_test(test_aes_decrypt_CTR_256  test_aes_decrypt.c amcl_core "SUCCESS" "aes/amcl_CTRMCL256.rsp"     "CTR")
+amcl_test(test_aes_decrypt_CFB1_256 test_aes_decrypt.c amcl_core "SUCCESS" "aes/CFB8MMT256.rsp"         "CFB1")
 
-    # Test ecdsa sign with curve NIST256
-    file(READ "test_ecdsa_sign_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_sign_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_sign_${tc}_256" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-256/sha256Sign.rsp" "sha256")
-    TV_TEST ("test_ecdsa_sign_${tc}_512" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-256/sha512Sign.rsp" "sha512")
-
-    # Test ecdsa verify with curve NIST256
-    file(READ "test_ecdsa_verify_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_verify_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_verify_${tc}_256" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-256/sha256Verify.rsp" "sha256")
-    TV_TEST ("test_ecdsa_verify_${tc}_512" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-256/sha512Verify.rsp" "sha512")
-  endif(${tc} STREQUAL "NIST256")
-
-  if(${tc} STREQUAL "NIST384")
-    # Test ecdh with curve NIST384
-    file(READ "test_ecdh_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdh_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdh_${tc}" "test_ecdh_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdh/P-384/KAS_ECC_CDH_PrimitiveTest.txt" "")
-
-    # Test ecdsa keypair with curve NIST384
-    file(READ "test_ecdsa_keypair_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_keypair_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_keypair_${tc}" "test_ecdsa_keypair_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/KeyPair.rsp" "")
-
-    # Test ecdsa sign with curve NIST384
-    file(READ "test_ecdsa_sign_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_sign_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_sign_${tc}_256" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha256Sign.rsp" "sha256")
-    TV_TEST ("test_ecdsa_sign_${tc}_384" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha384Sign.rsp" "sha384")
-    TV_TEST ("test_ecdsa_sign_${tc}_512" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha512Sign.rsp" "sha512")
-
-    # Test ecdsa verify with curve NIST384
-    file(READ "test_ecdsa_verify_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_verify_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_verify_${tc}_256" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha256Verify.rsp" "sha256")
-    TV_TEST ("test_ecdsa_verify_${tc}_384" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha384Verify.rsp" "sha384")
-    TV_TEST ("test_ecdsa_verify_${tc}_512" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-384/sha512Verify.rsp" "sha512")
-  endif(${tc} STREQUAL "NIST384")
-
-  if(${tc} STREQUAL "NIST521")
-    # Test ecdh with curve NIST521
-    file(READ "test_ecdh_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdh_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdh_${tc}" "test_ecdh_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdh/P-521/KAS_ECC_CDH_PrimitiveTest.txt" "")
-
-    # Test ecdsa keypair with curve NIST521
-    file(READ "test_ecdsa_keypair_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_keypair_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_keypair_${tc}" "test_ecdsa_keypair_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-521/KeyPair.rsp" "")
-
-    # Test ecdsa sign with curve NIST521
-    file(READ "test_ecdsa_sign_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_sign_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_sign_${tc}_256" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-521/sha256Sign.rsp" "sha256")
-    TV_TEST ("test_ecdsa_sign_${tc}_512" "test_ecdsa_sign_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-521/sha512Sign.rsp" "sha512")
-
-    # Test ecdsa verify with curve NIST521
-    file(READ "test_ecdsa_verify_ZZZ.c" tempc)
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecdsa_verify_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecdsa_verify_${tc}_256" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-521/sha256Verify.rsp" "sha256")
-    TV_TEST ("test_ecdsa_verify_${tc}_512" "test_ecdsa_verify_${tc}.c" "amcl_curve_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecdsa/P-521/sha512Verify.rsp" "sha512")
-  endif(${tc} STREQUAL "NIST521")
-
-  if(NOT(${pf} STREQUAL "NOT"))
+################################################
+# Curve Tests
+################################################
+foreach(curve ${AMCL_CURVE})
+  amcl_curve_field(BD "${curve}")
+  amcl_curve_field(PF "${curve}")
+  amcl_curve_field(TC "${curve}")
+  amcl_curve_field(TF "${curve}")
+  amcl_curve_field(CS "${curve}")
   
-    # Arithmetics test fp2 for pairing-friendly curves
-    file(READ "test_fp2_arithmetics_YYY.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_fp2_arithmetics_${tc}.c" "${tempc}")
-    TV_TEST ("test_fp2_arithmetics_${tc}" "test_fp2_arithmetics_${tc}.c" "amcl_pairing_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/fp2/test_vector_${tc}.txt" "")
+  amcl_curve_test(${curve} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in amcl_curve_${TC} "SUCCESS" "big/test_vector_big.txt")
+  amcl_curve_test(${curve} test_big_consistency_${BD} test_big_consistency_XXX.c.in amcl_curve_${TC} "SUCCESS")
+  amcl_curve_test(${curve} test_ecc_${TC}             test_ecc_ZZZ.c.in             amcl_curve_${TC} "SUCCESS")
+  amcl_curve_test(${curve} test_fp_arithmetics_${TF}  test_fp_arithmetics_YYY.c.in  amcl_curve_${TC} "SUCCESS" "fp/test_vector_${TF}.txt")
 
-    # Arithmetics test fp4 for pairing-friendly curves
-    file(READ "test_fp4_arithmetics_YYY.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_fp4_arithmetics_${tc}.c" "${tempc}")
-    TV_TEST ("test_fp4_arithmetics_${tc}" "test_fp4_arithmetics_${tc}.c" "amcl_pairing_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/fp4/test_vector_${tc}.txt" "")
-
-    # Aritmetics test for ecp2 for pairing-friendly curves
-    file(READ "test_ecp2_arithmetics_ZZZ.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_ecp2_arithmetics_${tc}.c" "${tempc}")
-    TV_TEST ("test_ecp2_arithmetics_${tc}" "test_ecp2_arithmetics_${tc}.c" "amcl_pairing_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/ecp2/test_vector_${tc}.txt" "")
-
-    # Tests bilinearity for pairing functions
-    file(READ "test_pair_ZZZ.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-    string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_pair_${tc}.c" "${tempc}")
-    SMOKE_TEST ("test_pair_${tc}" "test_pair_${tc}.c" "amcl_pairing_${tc}" "SUCCESS")
-
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-      # Aritmetics test output functions (used only for debug) - Linux specific code
-      file(READ "test_output_functions_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_output_functions_${tc}.c" "${tempc}")
-      TV_TEST ("test_output_functions_${tc}" "test_output_functions_${tc}.c" "amcl_pairing_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/output/test_vector_${tc}_${AMCL_CHUNK}.txt" "${PROJECT_BINARY_DIR}/Testing/Temporary/stdout.out")
-    endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
-    if(BUILD_MPIN)
-      # test mpin
-      file(READ "test_mpin_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_${tc}" "test_mpin_${tc}.c" "amcl_mpin_${tc}" "SUCCESS Error Code 0")
-
-       # test mpin signature
-      file(READ "test_mpin_sign_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_sign_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_sign_${tc}" "test_mpin_sign_${tc}.c" "amcl_mpin_${tc}" "TEST PASSED")
-
-       # test mpin with good pin
-      file(READ "test_mpin_good_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_good_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_good_${tc}" "test_mpin_good_${tc}.c" "amcl_mpin_${tc}" "SUCCESS Error Code 0")
-
-       # test mpin with bad pin
-      file(READ "test_mpin_bad_pin_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_bad_pin_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_bad_pin_${tc}" "test_mpin_bad_pin_${tc}.c" "amcl_mpin_${tc}" "FAILURE")
-
-       # test mpin with bad token
-      file(READ "test_mpin_bad_token_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_bad_token_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_bad_token_${tc}" "test_mpin_bad_token_${tc}.c" "amcl_mpin_${tc}" "FAILURE Invalid Token Error Code -19")
-
-       # test mpin with expired time permit
-      file(READ "test_mpin_expired_tp_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_expired_tp_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_expired_tp_${tf}" "test_mpin_expired_tp_${tc}.c" "amcl_mpin_${tc}" "FAILURE Invalid Token Error Code -19")
-
-       # test mpin with time permit
-      file(READ "test_mpin_tp_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_tp_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_tp_${tc}" "test_mpin_tp_${tc}.c" "amcl_mpin_${tc}" "SUCCESS Error Code 0")
-
-      # test DVS signature
-      file(READ "test_mpin_dvs_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_dvs_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_dvs_${tf}" "test_mpin_dvs_${tc}.c" "amcl_mpin_${tc}" "SUCCESS Error Code 0")
-
-      # test DVS signature with wrong public key
-      file(READ "test_mpin_dvs_wrong_pk_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_dvs_wrong_pk_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_dvs_wrong_pk_${tf}" "test_mpin_dvs_wrong_pk_${tc}.c" "amcl_mpin_${tc}" "FAILURE Signature Verification Error Code -19")
-
-       # test mpin random
-      file(READ "test_mpin_random_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_random_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpin_random_${tc}" "test_mpin_random_${tc}.c" "amcl_mpin_${tc}" "SUCCESS Error Code 0")
-
-       # test mpin full with sha256
-      file(READ "test_mpinfull_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpinfull_${tc}.c" "${tempc}")
-      TV_TEST ("test_mpinfull_sha256_${tc}" "test_mpinfull_${tc}.c" "amcl_mpin_${tc}" "SUCCESS" "sha256" "")
-      TV_TEST ("test_mpinfull_sha384_${tc}" "test_mpinfull_${tc}.c" "amcl_mpin_${tc}" "SUCCESS" "sha384" "")
-      TV_TEST ("test_mpinfull_sha512_${tc}" "test_mpinfull_${tc}.c" "amcl_mpin_${tc}" "SUCCESS" "sha512" "")
-
-      # test mpin full with time permit
-      file(READ "test_mpinfull_tp_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpinfull_tp_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpinfull_tp_${tc}" "test_mpinfull_tp_${tc}.c" "amcl_mpin_${tc}" "SUCCESS")
-
-      # test mpin full one pass
-      file(READ "test_mpinfull_onepass_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpinfull_onepass_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpinfull_onepass_${tc}" "test_mpinfull_onepass_${tc}.c" "amcl_mpin_${tc}" "SUCCESS")
-
-      # test mpin full one pass
-      file(READ "test_mpinfull_random_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpinfull_random_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_mpinfull_random_${tc}" "test_mpinfull_random_${tc}.c" "amcl_mpin_${tc}" "SUCCESS")
-
-      # if(${tf} STREQUAL "BN254CX")
-      #   # test mpin full one pass
-      #   file(READ "test_mpin_vectors_ZZZ.c" tempc)
-      #   string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      #   string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      #   string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      #   file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_mpin_vectors_${tc}.c" "${tempc}")
-      #   TV_TEST ("test_mpin_vectors_${tf}" "test_mpin_vectors_${tf}.c" "amcl_mpin_${tc}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/mpin/BN254_CX.txt" "")
-      # endif(${tf} STREQUAL "BN254CX")
-    endif(BUILD_MPIN)
-
-    if(BUILD_WCC)
-      # test wcc
-      file(READ "test_wcc_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_wcc_${tc}.c" "${tempc}")
-      TV_TEST ("test_wcc_sha256_${tc}" "test_wcc_${tc}.c" "amcl_wcc_${tc}" "SUCCESS" "sha256" "")
-      TV_TEST ("test_wcc_sha384_${tc}" "test_wcc_${tc}.c" "amcl_wcc_${tc}" "SUCCESS" "sha384" "")
-      TV_TEST ("test_wcc_sha512_${tc}" "test_wcc_${tc}.c" "amcl_wcc_${tc}" "SUCCESS" "sha512" "")
-
-      # test wcc random
-      file(READ "test_wcc_random_ZZZ.c" tempc)
-      string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-      string(REGEX REPLACE "YYY" ${tf} tempc "${tempc}")
-      string(REGEX REPLACE "ZZZ" ${tc} tempc "${tempc}")
-      file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_wcc_random_${tc}.c" "${tempc}")
-      SMOKE_TEST ("test_wcc_random_${tc}" "test_wcc_random_${tc}.c" "amcl_wcc_${tc}" "SUCCESS")
-    endif(BUILD_WCC)  
-
-  endif(NOT(${pf} STREQUAL "NOT"))
-
-endfunction(CURVE_TESTS_SET tb tf tc nb base nbt m8 mt ct pf)
-
-function(RSA_TESTS_SET tb tff nb base ml)
-  set(bd "${tb}_${base}")
-
-  if(NOT(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/test_big_arithmetics_${bd}.c"))
-    # test BIG arithmetics
-    file(READ "test_big_arithmetics_XXX.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_big_arithmetics_${bd}.c" "${tempc}")
-    TV_TEST ("test_big_arithmetics_${bd}" "test_big_arithmetics_${bd}.c" "amcl_rsa_${tff}" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/big/test_vector_big.txt" "")
-
-    # test BIG consistency
-    file(READ "test_big_consistency_XXX.c" tempc)
-    string(REGEX REPLACE "XXX" ${bd} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_big_consistency_${bd}.c" "${tempc}")
-    SMOKE_TEST ("test_big_consistency_${bd}" "test_big_consistency_${bd}.c" "amcl_rsa_${tff}" "SUCCESS")
+  if(NOT ${TC} MATCHES "^NUMS[0-9]+E$")
+    amcl_curve_test(${curve} test_ecp_arithmetics_${TC} test_ecp_arithmetics_ZZZ.c.in amcl_curve_${TC} "SUCCESS" "ecp/test_vector_${TC}.txt")
   endif()
 
-    # test rsa
-    file(READ "test_rsa_WWW.c" tempc)
-    string(REGEX REPLACE "WWW" ${tff} tempc "${tempc}")
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_rsa_${tff}.c" "${tempc}")
-    SMOKE_TEST ("test_rsa_${tff}" "test_rsa_${tff}.c" "amcl_rsa_${tff}" "SUCCESS")
+  if(curve STREQUAL "NIST256")
+    amcl_curve_test(${curve} test_ecdh_${TC}             test_ecdh_ZZZ.c.in          amcl_curve_${TC} "SUCCESS" "ecdh/P-256/KAS_ECC_CDH_PrimitiveTest.txt")
+    amcl_curve_test(${curve} test_ecdsa_keypair_${TC}    test_ecdsa_keypair_ZZZ.c.in amcl_curve_${TC} "SUCCESS" "ecdsa/P-256/KeyPair.rsp")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_256   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-256/sha256Sign.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_512   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-256/sha512Sign.rsp" "sha512")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_256 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-256/sha256Verify.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_512 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-256/sha512Verify.rsp" "sha512")
+  endif()
 
-endfunction(RSA_TESTS_SET tb tff nb base ml)
+  if(curve STREQUAL "NIST384")
+    amcl_curve_test(${curve} test_ecdh_${TC}             test_ecdh_ZZZ.c.in          amcl_curve_${TC} "SUCCESS" "ecdh/P-384/KAS_ECC_CDH_PrimitiveTest.txt")
+    amcl_curve_test(${curve} test_ecdsa_keypair_${TC}    test_ecdsa_keypair_ZZZ.c.in amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/KeyPair.rsp")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_256   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha256Sign.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_384   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha384Sign.rsp" "sha384")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_512   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha512Sign.rsp" "sha512")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_256 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha256Verify.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_384 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha384Verify.rsp" "sha384")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_512 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-384/sha512Verify.rsp" "sha512")
+  endif()
 
-string(REGEX REPLACE "," ";" AMCL_CURVE ${AMCL_CURVE})
-string(REGEX REPLACE "," ";" AMCL_RSA ${AMCL_RSA})
+  if(curve STREQUAL "NIST521")
+    amcl_curve_test(${curve} test_ecdh_${TC}             test_ecdh_ZZZ.c.in          amcl_curve_${TC} "SUCCESS" "ecdh/P-521/KAS_ECC_CDH_PrimitiveTest.txt")
+    amcl_curve_test(${curve} test_ecdsa_keypair_${TC}    test_ecdsa_keypair_ZZZ.c.in amcl_curve_${TC} "SUCCESS" "ecdsa/P-521/KeyPair.rsp")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_256   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-521/sha256Sign.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_sign_${TC}_512   test_ecdsa_sign_ZZZ.c.in    amcl_curve_${TC} "SUCCESS" "ecdsa/P-521/sha512Sign.rsp" "sha512")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_256 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-521/sha256Verify.rsp" "sha256")
+    amcl_curve_test(${curve} test_ecdsa_verify_${TC}_512 test_ecdsa_verify_ZZZ.c.in  amcl_curve_${TC} "SUCCESS" "ecdsa/P-521/sha512Verify.rsp" "sha512")
+  endif()
 
-foreach(CURVE ${AMCL_CURVE})
-  if(AMCL_CHUNK STREQUAL "64")
-    if(CURVE STREQUAL "ED25519")
-        CURVE_TESTS_SET("256" "25519" "ED25519" "32" "56" "255" "5" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "C25519")
-        CURVE_TESTS_SET("256" "25519" "C25519" "32" "56" "255" "5" "PSEUDO_MERSENNE" "MONTGOMERY" "NOT")
-    elseif(CURVE STREQUAL "NIST256")
-        CURVE_TESTS_SET("256" "NIST256" "NIST256" "32" "56" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "BRAINPOOL")
-        CURVE_TESTS_SET("256" "BRAINPOOL" "BRAINPOOL" "32" "56" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "ANSSI")
-        CURVE_TESTS_SET("256" "ANSSI" "ANSSI" "32" "56" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "HIFIVE")
-        CURVE_TESTS_SET("336" "HIFIVE" "HIFIVE" "42" "60" "336" "5" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "GOLDILOCKS")
-        CURVE_TESTS_SET("448" "GOLDILOCKS" "GOLDILOCKS" "56" "58" "448" "7" "GENERALISED_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NIST384")
-        CURVE_TESTS_SET("384" "NIST384" "NIST384" "48" "56" "384" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "C41417")
-        CURVE_TESTS_SET("416" "C41417" "C41417" "52" "60" "414" "7" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NIST521")
-        CURVE_TESTS_SET("528" "NIST521" "NIST521" "66" "60" "521" "7" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS256W")
-        CURVE_TESTS_SET("256" "256PMW" "NUMS256W" "32" "56" "256" "3" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS256E")
-        CURVE_TESTS_SET("256" "256PME" "NUMS256E" "32" "56" "256" "3" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NUMS384W")
-        CURVE_TESTS_SET("384" "384PM" "NUMS384W" "48" "56" "384" "3" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS384E")
-        CURVE_TESTS_SET("384" "384PM" "NUMS384E" "48" "56" "384" "3" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NUMS512W")
-        CURVE_TESTS_SET("512" "512PM" "NUMS512W" "64" "56" "512" "7" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS512E")
-        CURVE_TESTS_SET("512" "512PM" "NUMS512E" "64" "56" "512" "7" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "BN254")
-        CURVE_TESTS_SET("256" "BN254" "BN254" "32" "56" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    elseif(CURVE STREQUAL "BN254CX")
-        CURVE_TESTS_SET("256" "BN254CX" "BN254CX" "32" "56" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    elseif(CURVE STREQUAL "BLS383")
-        CURVE_TESTS_SET("384" "BLS383" "BLS383" "48" "56" "383" "3" "NOT_SPECIAL" "WEIERSTRASS" "BLS")
-    else()
-      message(FATAL_ERROR "Invalid curve input")
-    endif(CURVE STREQUAL "ED25519")
-  elseif(AMCL_CHUNK STREQUAL "32")
-    if(CURVE STREQUAL "ED25519")
-        CURVE_TESTS_SET("256" "25519" "ED25519" "32" "29" "255" "5" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "C25519")
-        CURVE_TESTS_SET("256" "25519" "C25519" "32" "29" "255" "5" "PSEUDO_MERSENNE" "MONTGOMERY" "NOT")
-    elseif(CURVE STREQUAL "NIST256")
-        CURVE_TESTS_SET("256" "NIST256" "NIST256" "32" "28" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "BRAINPOOL")
-        CURVE_TESTS_SET("256" "BRAINPOOL" "BRAINPOOL" "32" "28" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "ANSSI")
-        CURVE_TESTS_SET("256" "ANSSI" "ANSSI" "32" "28" "256" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "HIFIVE")
-        CURVE_TESTS_SET("336" "HIFIVE" "HIFIVE" "42" "29" "336" "5" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "GOLDILOCKS")
-        CURVE_TESTS_SET("448" "GOLDILOCKS" "GOLDILOCKS" "56" "29" "448" "7" "GENERALISED_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NIST384")
-        CURVE_TESTS_SET("384" "NIST384" "NIST384" "48" "29" "384" "7" "NOT_SPECIAL" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "C41417")
-        CURVE_TESTS_SET("416" "C41417" "C41417" "52" "29" "414" "7" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NIST521")
-        CURVE_TESTS_SET("528" "NIST521" "NIST521" "66" "28" "521" "7" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS256W")
-        CURVE_TESTS_SET("256" "256PMW" "NUMS256W" "32" "28" "256" "3" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS256E")
-        CURVE_TESTS_SET("256" "256PME" "NUMS256E" "32" "29" "256" "3" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NUMS384W")
-        CURVE_TESTS_SET("384" "384PM" "NUMS384W" "48" "29" "384" "3" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS384E")
-        CURVE_TESTS_SET("384" "384PM" "NUMS384E" "48" "29" "384" "3" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "NUMS512W")
-        CURVE_TESTS_SET("512" "512PM" "NUMS512W" "64" "29" "512" "7" "PSEUDO_MERSENNE" "WEIERSTRASS" "NOT")
-    elseif(CURVE STREQUAL "NUMS512E")
-        CURVE_TESTS_SET("512" "512PM" "NUMS512E" "64" "29" "512" "7" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "BN254")
-        CURVE_TESTS_SET("256" "BN254" "BN254" "32" "28" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    elseif(CURVE STREQUAL "BN254CX")
-        CURVE_TESTS_SET("256" "BN254CX" "BN254CX" "32" "28" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    elseif(CURVE STREQUAL "BLS383")
-        CURVE_TESTS_SET("384" "BLS383" "BLS383" "48" "29" "383" "3" "NOT_SPECIAL" "WEIERSTRASS" "BLS")
-    else()
-      message(FATAL_ERROR "Invalid curve input")
-    endif(CURVE STREQUAL "ED25519")
-  elseif(AMCL_CHUNK STREQUAL "16")
-    if(CURVE STREQUAL "ED25519")
-        CURVE_TESTS_SET("256" "25519" "ED25519" "32" "13" "255" "5" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "C25519")
-        CURVE_TESTS_SET("256" "25519" "C25519" "32" "13" "255" "5" "PSEUDO_MERSENNE" "MONTGOMERY" "NOT")
-    elseif(CURVE STREQUAL "NUMS256E")
-        CURVE_TESTS_SET("256" "256PME" "NUMS256E" "32" "13" "256" "3" "PSEUDO_MERSENNE" "EDWARDS" "NOT")
-    elseif(CURVE STREQUAL "BN254")
-        CURVE_TESTS_SET("256" "BN254" "BN254" "32" "13" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    elseif(CURVE STREQUAL "BN254CX")
-        CURVE_TESTS_SET("256" "BN254CX" "BN254CX" "32" "13" "254" "3" "NOT_SPECIAL" "WEIERSTRASS" "BN")
-    else()
-      message(FATAL_ERROR "Invalid curve input")
-    endif(CURVE STREQUAL "ED25519")
-  endif(AMCL_CHUNK STREQUAL "64")
-endforeach(CURVE)
+  ################################################
+  # Pairing Friendly Curve Tests
+  ################################################
+  if(NOT ${PF} STREQUAL "NOT")
+    amcl_curve_test(${curve} test_fp2_arithmetics_${TC}  test_fp2_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp2/test_vector_${TC}.txt")
+    amcl_curve_test(${curve} test_fp4_arithmetics_${TC}  test_fp4_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp4/test_vector_${TC}.txt")
+    if(CS STREQUAL "128")
+      amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
+    elseif(CS STREQUAL "192")
+      amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_fp24_arithmetics_${TC}  test_fp24_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp24/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_ecp4_arithmetics_${TC} test_ecp4_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp4/test_vector_${TC}.txt")
+    elseif(CS STREQUAL "256")
+      amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_fp16_arithmetics_${TC}  test_fp16_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp16/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_fp48_arithmetics_${TC}  test_fp48_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp48/test_vector_${TC}.txt")
+      amcl_curve_test(${curve} test_ecp8_arithmetics_${TC} test_ecp8_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp8/test_vector_${TC}.txt")
+    endif(CS STREQUAL "128")
+    amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
 
-foreach(RSA ${AMCL_RSA})
-  if(AMCL_CHUNK STREQUAL "64")
-    if(RSA STREQUAL "2048")
-      RSA_TESTS_SET("1024" "2048" "128" "58" "2")
-    elseif(RSA STREQUAL "3072")
-      RSA_TESTS_SET("384" "3072" "48" "56" "8")
-    elseif(RSA STREQUAL "4096")
-      RSA_TESTS_SET("512" "4096" "64" "60" "8")
-    else()
-      message(FATAL_ERROR "Invalid RSA input")
-    endif(RSA STREQUAL "2048")
-  elseif(AMCL_CHUNK STREQUAL "32")
-    if(RSA STREQUAL "2048")
-      RSA_TESTS_SET("1024" "2048" "128" "28" "2")
-    elseif(RSA STREQUAL "3072")
-      RSA_TESTS_SET("384" "3072" "48" "28" "8")
-    elseif(RSA STREQUAL "4096")
-      RSA_TESTS_SET("512" "4096" "64" "29" "8")
-    else()
-      message(FATAL_ERROR "Invalid RSA input")
-    endif(RSA STREQUAL "2048")
-  elseif(AMCL_CHUNK STREQUAL "16")
-    if(RSA STREQUAL "2048")
-      RSA_TESTS_SET("256" "2048" "32" "13" "8")
-    else()
-      message(FATAL_ERROR "Invalid RSA input")
-    endif(RSA STREQUAL "2048")
-  else()
-    message(FATAL_ERROR "Invalid CHUNK size")
-  endif(AMCL_CHUNK STREQUAL "64")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+      # Test arithmetics debug output functions - Linux specific code
+      amcl_curve_test(${curve} test_output_functions_${TC} test_output_functions_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "output/test_vector_${TC}_${WORD_SIZE}.txt" "stdout.out")
+    endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
-  if(BUILD_X509)
-		foreach(CURVE ${AMCL_CURVE})
+    ################################################
+    # MPIN Tests
+    ################################################
+    if(BUILD_MPIN)
+      amcl_curve_test(${curve} test_mpin_${TC}              test_mpin_ZZZ.c.in              amcl_mpin_${TC} "SUCCESS Error Code 0")
+      amcl_curve_test(${curve} test_mpin_sign_${TC}         test_mpin_sign_ZZZ.c.in         amcl_mpin_${TC} "TEST PASSED")
+      amcl_curve_test(${curve} test_mpin_good_${TC}         test_mpin_good_ZZZ.c.in         amcl_mpin_${TC} "SUCCESS Error Code 0")
+      amcl_curve_test(${curve} test_mpin_bad_pin_${TC}      test_mpin_bad_pin_ZZZ.c.in      amcl_mpin_${TC} "FAILURE")
+      amcl_curve_test(${curve} test_mpin_bad_token_${TC}    test_mpin_bad_token_ZZZ.c.in    amcl_mpin_${TC} "FAILURE")
+      amcl_curve_test(${curve} test_mpin_tp_${TC}           test_mpin_tp_ZZZ.c.in           amcl_mpin_${TC} "SUCCESS Error Code 0")
+      amcl_curve_test(${curve} test_mpin_expired_tp_${TC}   test_mpin_expired_tp_ZZZ.c.in   amcl_mpin_${TC} "FAILURE Invalid Token Error Code -19")
+      amcl_curve_test(${curve} test_mpin_dvs_${TC}          test_mpin_dvs_ZZZ.c.in          amcl_mpin_${TC} "SUCCESS Error Code 0")
+      amcl_curve_test(${curve} test_mpin_dvs_wrong_pk_${TC} test_mpin_dvs_wrong_pk_ZZZ.c.in amcl_mpin_${TC} "FAILURE Signature Verification Error Code -19")
+      amcl_curve_test(${curve} test_mpin_random_${TC}       test_mpin_random_ZZZ.c.in       amcl_mpin_${TC} "SUCCESS Error Code 0")
+      amcl_curve_test(${curve} test_mpinfull_sha256_${TC}   test_mpinfull_ZZZ.c.in          amcl_mpin_${TC} "SUCCESS" "sha256")
+      amcl_curve_test(${curve} test_mpinfull_sha384_${TC}   test_mpinfull_ZZZ.c.in          amcl_mpin_${TC} "SUCCESS" "sha384")
+      amcl_curve_test(${curve} test_mpinfull_sha512_${TC}   test_mpinfull_ZZZ.c.in          amcl_mpin_${TC} "SUCCESS" "sha512")
+      amcl_curve_test(${curve} test_mpinfull_tp_${TC}       test_mpinfull_tp_ZZZ.c.in       amcl_mpin_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_mpinfull_onepass_${TC}  test_mpinfull_onepass_ZZZ.c.in  amcl_mpin_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_mpinfull_random_${TC}   test_mpinfull_random_ZZZ.c.in   amcl_mpin_${TC} "SUCCESS")
+      if(curve STREQUAL "BN254CX")
+	     amcl_curve_test(${curve} test_mpin_vectors_${TC}    test_mpin_vectors_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BN254_CX.txt")
+      endif()
+    endif()
 
-			if(CURVE STREQUAL "NIST256" AND RSA STREQUAL "2048")
-				file(READ "test_x509_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_x509_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_x509_${RSA}_${CURVE}_1" "test_x509_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/x509/2048_P256/x509-vect.txt" "")
-		    TV_TEST ("test_x509_${RSA}_${CURVE}_2" "test_x509_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/x509/2048_P256/pkits-vect.txt" "")
+    ################################################
+    # WCC Tests
+    ################################################
+    if(BUILD_WCC)
+      amcl_curve_test(${curve} test_wcc_${TC} test_wcc_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_wcc_random_${TC} test_wcc_random_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_wcc_invalid_points_${TC} test_wcc_invalid_points_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_wcc_bad_sender_key_${TC} test_wcc_bad_sender_key_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_wcc_bad_receiver_key_${TC} test_wcc_bad_receiver_key_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
+    endif()
 
-		    file(READ "test_rsa_sign_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_rsa_sign_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_rsa_sign_${RSA}_${CURVE}" "test_rsa_sign_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/rsa/2048/pkcs-vect.txt" "")
-			endif(CURVE STREQUAL "NIST256" AND RSA STREQUAL "2048")
+  endif()
+endforeach()
 
-			if(CURVE STREQUAL "NIST256" AND RSA STREQUAL "4096")
-				file(READ "test_rsa_sign_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_rsa_sign_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_rsa_sign_${RSA}_${CURVE}" "test_rsa_sign_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/rsa/4096/pkcs-vect.txt" "")
+################################################
+# RSA Tests
+################################################
+foreach(level ${AMCL_RSA})
+  amcl_rsa_field(BD "${level}")
+  amcl_rsa_field(TFF "${level}")
 
-				file(READ "test_x509_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_x509_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_x509_${RSA}_${CURVE}" "test_x509_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/x509/4096/x509-vect.txt" "")
-			endif(CURVE STREQUAL "NIST256" AND RSA STREQUAL "4096")
+  amcl_rsa_test(${level} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in amcl_rsa_${TFF} "SUCCESS" "big/test_vector_big.txt")
+  amcl_rsa_test(${level} test_big_consistency_${BD} test_big_consistency_XXX.c.in amcl_rsa_${TFF} "SUCCESS")
+  amcl_rsa_test(${level} test_rsa_${TFF}            test_rsa_WWW.c.in             amcl_rsa_${TFF} "SUCCESS")
+endforeach()
 
-			if(CURVE STREQUAL "NIST384" AND RSA STREQUAL "3072")
-		    file(READ "test_rsa_sign_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_rsa_sign_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_rsa_sign_${RSA}_${CURVE}" "test_rsa_sign_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/rsa/3072/pkcs-vect.txt" "")
+################################################
+# X509 Tests
+################################################
+if(BUILD_X509)
+  foreach(level ${AMCL_RSA})
+    foreach(curve ${AMCL_CURVE})
 
-				file(READ "test_x509_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_x509_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_x509_${RSA}_${CURVE}" "test_x509_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/x509/3072_P384/x509-vect.txt" "")
-			endif(CURVE STREQUAL "NIST384" AND RSA STREQUAL "3072")
+      set(deps "amcl_x509;amcl_rsa_${level};amcl_curve_${curve}")
+      
+      if (level STREQUAL "2048" AND curve STREQUAL "NIST256")
+	amcl_rsa_curve_test(${level} ${curve} test_x509_${level}_${curve}_1   test_x509_WWW_ZZZ.c.in     "${deps}" "SUCCESS" "x509/2048_P256/x509-vect.txt")
+	amcl_rsa_curve_test(${level} ${curve} test_x509_${level}_${curve}_2   test_x509_WWW_ZZZ.c.in     "${deps}" "SUCCESS" "x509/2048_P256/pkits-vect.txt")
+	amcl_rsa_curve_test(${level} ${curve} test_rsa_sign_${level}_${curve} test_rsa_sign_WWW_ZZZ.c.in "${deps}" "SUCCESS" "rsa/2048/pkcs-vect.txt")
+      endif()
 
-			if(CURVE STREQUAL "NIST521")
-				file(READ "test_x509_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_x509_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_x509_${RSA}_${CURVE}" "test_x509_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/x509/P521/x509-vect.txt" "")
-			endif(CURVE STREQUAL "NIST521")
+      if (level STREQUAL "4096" AND curve STREQUAL "NIST256")
+	amcl_rsa_curve_test(${level} ${curve} test_x509_${level}_${curve}_1   test_x509_WWW_ZZZ.c.in     "${deps}" "SUCCESS" "x509/4096/x509-vect.txt")
+	amcl_rsa_curve_test(${level} ${curve} test_rsa_sign_${level}_${curve} test_rsa_sign_WWW_ZZZ.c.in "${deps}" "SUCCESS" "rsa/4096/pkcs-vect.txt")
+      endif()
 
-			if(CURVE STREQUAL "C25519" AND RSA STREQUAL "2048")
-				file(READ "test_rsa_sign_WWW_ZZZ.c" tempc)
-				string(REGEX REPLACE "WWW" ${RSA} tempc "${tempc}")
-		    string(REGEX REPLACE "ZZZ" ${CURVE} tempc "${tempc}")
-		    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/test_rsa_sign_${RSA}_${CURVE}.c" "${tempc}")
-		    TV_TEST ("test_rsa_sign_${RSA}_${CURVE}" "test_rsa_sign_${RSA}_${CURVE}.c" "amcl_x509" "SUCCESS" "${PROJECT_SOURCE_DIR}/testVectors/rsa/2048/pkcs-vect.txt" "")
-			endif(CURVE STREQUAL "C25519" AND RSA STREQUAL "2048")
+      if (level STREQUAL "3072" AND curve STREQUAL "NIST384")
+	amcl_rsa_curve_test(${level} ${curve} test_x509_${level}_${curve}_1   test_x509_WWW_ZZZ.c.in     "${deps}" "SUCCESS" "x509/3072_P384/x509-vect.txt")
+	amcl_rsa_curve_test(${level} ${curve} test_rsa_sign_${level}_${curve} test_rsa_sign_WWW_ZZZ.c.in "${deps}" "SUCCESS" "rsa/3072/pkcs-vect.txt")
+      endif()
 
-		endforeach(CURVE ${AMCL_CURVE})
-	endif(BUILD_X509)
-endforeach(RSA)
+      if (curve STREQUAL "NIST521")
+	amcl_rsa_curve_test(${level} ${curve} test_x509_${level}_${curve}_1   test_x509_WWW_ZZZ.c.in     "${deps}" "SUCCESS" "x509/P521/x509-vect.txt")
+      endif()
+
+      if (level STREQUAL "2048" AND curve STREQUAL "C25519")
+	amcl_rsa_curve_test(${level} ${curve} test_rsa_sign_${level}_${curve} test_rsa_sign_WWW_ZZZ.c.in "${deps}" "SUCCESS" "rsa/2048/pkcs-vect.txt")
+      endif()
+
+    endforeach()
+  endforeach()
+endif()

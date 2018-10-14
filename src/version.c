@@ -35,21 +35,102 @@ void amcl_version(void)
     printf("AMCL Version: %d.%d.%d\n", AMCL_VERSION_MAJOR, AMCL_VERSION_MINOR, AMCL_VERSION_PATCH);
     printf("OS: %s\n", OS);
     printf("CHUNK: %d\n", CHUNK);
-    // printf("CURVETYPE: %s\n", CURVETYPE_DESC);
-    // printf("CHOICE: %s\n", CHOICE_DESC);
-    // printf("MODTYPE: %s\n", MODTYPE_DESC);
-    // printf("MBITS - Number of bits in Modulus: %d\n", MBITS);
-    // printf("MODBYTES - Number of bytes in Modulus: %d\n", MODBYTES);
-    // printf("BASEBITS - Numbers represented to base 2*BASEBITS: %d\n", BASEBITS);
-    // printf("NLEN - Number of words in BIG: %d\n", NLEN);
 
-    // BIG p, r;
-    // BIG_rcopy(p,Modulus);
-    // printf("Modulus p = ");
-    // BIG_output(p);
-    // printf("\n");
-    // BIG_rcopy(r,CURVE_Order);
-    // printf("CURVE_Order r = ");
-    // BIG_output(r);
-    // printf("\n");
+    /*
+     * Supported curves
+     * Current choice of Elliptic Curves:
+     * - NIST256
+     * - C25519
+     * - ED25519
+     * - BRAINPOOL
+     * - ANSSI
+     * - NUMS256E
+     * - NUMS256W
+     * - NUMS384E
+     * - NUMS384W
+     * - NUMS512E
+     * - NUMS512W
+     * - HIFIVE
+     * - GOLDILOCKS
+     * - NIST384
+     * - C41417
+     * - NIST521
+     * - BN254
+     * - BN254CX
+     * - BLS383
+     */
+    printf("\nSupported curves:\n");
+#ifdef NIST256_VER
+    printf("- NIST256\n");
+#endif
+#ifdef C25519_VER
+    printf("- C25519\n");
+#endif
+#ifdef ED25519_VER
+    printf("- ED25519\n");
+#endif
+#ifdef BRAINPOOL_VER
+    printf("- BRAINPOOL\n");
+#endif
+#ifdef ANSSI_VER
+    printf("- ANSSI\n");
+#endif
+#ifdef NUMS256E_VER
+    printf("- NUMS256E\n");
+#endif
+#ifdef NUMS256W_VER
+    printf("- NUMS256W\n");
+#endif
+#ifdef NUMS384E_VER
+    printf("- NUMS384E\n");
+#endif
+#ifdef NUMS384W_VER
+    printf("- NUMS384W\n");
+#endif
+#ifdef NUMS512E_VER
+    printf("- NUMS512E\n");
+#endif
+#ifdef NUMS512W_VER
+    printf("- NUMS512W\n");
+#endif
+#ifdef HIFIVE_VER
+    printf("- HIFIVE\n");
+#endif
+#ifdef GOLDILOCKS_VER
+    printf("- GOLDILOCKS\n");
+#endif
+#ifdef NIST384_VER
+    printf("- NIST384\n");
+#endif
+#ifdef C41417_VER
+    printf("- C41417\n");
+#endif
+#ifdef NIST521_VER
+    printf("- NIST521\n");
+#endif
+#ifdef BN254_VER
+    printf("- BN254\n");
+#endif
+#ifdef BN254CX_VER
+    printf("- BN254CX\n");
+#endif
+#ifdef BLS383_VER
+    printf("- BLS383\n");
+#endif
+
+    /*
+     * Supported RSA security levels
+     * Current choice of security levels: 2048, 3072, 4096
+     */
+    printf("\nRSA security levels:\n");
+#ifdef RSA_SECURITY_LEVEL_2048_VER
+    printf("- 2048\n");
+#endif
+#ifdef RSA_SECURITY_LEVEL_3072_VER
+    printf("- 3072\n");
+#endif
+#ifdef RSA_SECURITY_LEVEL_4096_VER
+    printf("- 4096\n");
+#endif
+
 }

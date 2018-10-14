@@ -1,56 +1,70 @@
-cmake_minimum_required (VERSION 3.1)
-project (AMCL)
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+
+file(STRINGS "VERSION" VERSION_STRING)
+project(AMCL VERSION "${VERSION_STRING}" LANGUAGES C)
+
+##################################################
+# Helper Macros
+##################################################
+macro(log var)
+  message(STATUS "${var}: ${${var}}")
+endmacro()
+
+macro(set_if_unset var val)
+  if(NOT ${var})
+    set(${var} "${val}")
+  endif()
+  log(${var})
+endmacro()
+
+##################################################
+# Includes
+##################################################
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(AMCLExpand)
+include(CMakeDependentOption)
+include(CTest)
+include(DetermineWordSize)
+include(GNUInstallDirs)
+include(SetOSVariable)
+
+##################################################
+# Internal settings
+##################################################
+message(STATUS "AMCL")
+log(PROJECT_VERSION)
+log(CMAKE_GENERATOR)
 
 add_definitions(-DCMAKE)
 
-# enable testing
-enable_testing ()
+set(AMCL_VERSION       ${PROJECT_VERSION})
+set(AMCL_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(AMCL_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(AMCL_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 
-# Extract version from the VERSION file
-file(STRINGS VERSION VERSION_FILE_CONTENT)
-string(REPLACE "." ";" VERSION_FILE_PARTS ${VERSION_FILE_CONTENT})
-list(GET VERSION_FILE_PARTS 0 AMCL_VERSION_MAJOR)
-list(GET VERSION_FILE_PARTS 1 AMCL_VERSION_MINOR)
-list(GET VERSION_FILE_PARTS 2 AMCL_VERSION_PATCH)
-set(PROJECT_VERSION "${AMCL_VERSION_MAJOR}.${AMCL_VERSION_MINOR}.${AMCL_VERSION_PATCH}")
-message(STATUS "PROJECT_VERSION='${PROJECT_VERSION}'")
-message(STATUS "Generator - ${CMAKE_GENERATOR}")
-
-# Add options for build
-option (BUILD_SHARED_LIBS "Build Shared Libraries" ON)
-option (BUILD_PYTHON "Build Python" OFF)
-option (BUILD_GO "Build Golang" OFF)
-option (BUILD_MPIN "Build MPIN" ON)
-option (BUILD_WCC "Build WCC" ON)
-option (BUILD_DOXYGEN "Build Doxygen" ON)
-option (USE_PATENTS "Use patents for G1 and G2 multiplication" OFF)
-option (DEBUG_REDUCE "Print debug message for field reduction" OFF)
-option (DEBUG_NORM "Detect digit overflow" OFF)
-option (GET_STATS "Debug statistics" OFF)
-
-# Allow the developer to select if Dynamic or Static libraries are built
-# Set the default LIB_TYPE variable to STATIC
-SET (LIB_TYPE STATIC)
-IF (BUILD_SHARED_LIBS)
-  # User wants to build Dynamic Libraries, so change the LIB_TYPE variable to CMake keyword 'SHARED'
-  SET (LIB_TYPE SHARED)
-ENDIF (BUILD_SHARED_LIBS)
-
-set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE}
-    CACHE STRING "Choose the type of build: Debug Release Coverage ASan Check CheckFull"
-    FORCE)
-
-# Set a default build type if none was specified
-if(NOT CMAKE_BUILD_TYPE)
-  message(STATUS "Setting build type to 'Release' as none was specified.")
-  set(CMAKE_BUILD_TYPE Release)
-endif(NOT CMAKE_BUILD_TYPE)
+set(AMCL_SOVERSION ${AMCL_VERSION_MAJOR})
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                     OUTPUT_VARIABLE GCC_VERSION)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Wno-strict-prototypes -Wunused-value -Wcast-align -Wunused-variable -Wundef -Wformat-security")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -static-libgcc -Wall -Wextra -Wno-strict-prototypes -Wunused-value -Wcast-align -Wunused-variable -Wundef -Wformat-security")
 
     if (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wshadow")
@@ -70,110 +84,564 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     set(CMAKE_SHARED_LINKER_FLAGS "--coverage")
 endif(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-   # Mac OS X specific code
-   set(OS "Mac OS X")
-   # MACOSX_RPATH
-   cmake_policy(SET CMP0042 NEW)
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+##################################################
+# Options
+##################################################
+### Build Type ###
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose type of build." FORCE)
+endif()
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Release" "Debug" "Coverage" "ASan" "Check" "CheckFull")
+log(CMAKE_BUILD_TYPE)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-   # Linux specific code
-   # Default install path on Linux
-   set(OS "Linux")
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+### Configurations ###
+set_if_unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set_if_unset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set_if_unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+log(CMAKE_INSTALL_PREFIX)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-   # Windows specific code
-   set(OS "Windows")
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+### Options ###
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
+log(BUILD_SHARED_LIBS)
 
-# Select word length
-set(AMCL_CHUNK "64" CACHE STRING "Word length. See ./include/arch.h for explanation")
-set(Word_Length_Values "16;32;64")
-set_property(CACHE AMCL_CHUNK PROPERTY STRINGS ${Word_Length_Values})
-message(STATUS "AMCL_CHUNK='${AMCL_CHUNK}'")
+option(BUILD_BENCHMARKS  "Build benchmarks"       ON)
+option(BUILD_DOCS        "Build docs"             ON)
+option(BUILD_EXAMPLES    "Build examples"         ON)
+cmake_dependent_option(BUILD_PYTHON "Build Python" OFF "BUILD_SHARED_LIBS" OFF)
+log(BUILD_BENCHMARKS)
+log(BUILD_DOCS)
+log(BUILD_EXAMPLES)
+log(BUILD_PYTHON)
+log(BUILD_TESTING) # added by 'include(CTest)'
 
-# Select Field
-set(AMCL_CURVE "BN254CX" CACHE STRING "Choice of Field. See ./include/amcl.h for explanation")
-set(Curves_values "NIST256;C25519;ED25519;BRAINPOOL;ANSSI;NUMS256E;NUMS256W;NUMS384E;NUMS384W;NUMS512E;NUMS512W;HIFIVE;GOLDILOCKS;NIST384;C41417;NIST521;BN254;BN254CX;BLS383")
-set_property(CACHE AMCL_CURVE PROPERTY STRINGS ${Curves_values})
-message(STATUS "AMCL_CURVE='${AMCL_CURVE}'")
+option(BUILD_MPIN    "Build MPIN"    ON)
+option(BUILD_WCC     "Build WCC"     ON)
+option(BUILD_X509    "BUild X509"    ON)
+log(BUILD_MPIN)
+log(BUILD_WCC)
+log(BUILD_X509)
 
-# Select RSA security level
-set(AMCL_RSA "2048" CACHE STRING "RSA level of security supported. See ./include/rsa_WWW.h for explanation")
-set(rsa_values "2048;3072;4096")
-set_property(CACHE AMCL_RSA PROPERTY STRINGS ${rsa_values})
-message(STATUS "AMCL_RSA='${AMCL_RSA}'")
+option(DEBUG_REDUCE "Print debug message for field reduction" OFF)
+option(DEBUG_NORM "Detect digit overflow" OFF)
+option(GET_STATS "Debug statistics" OFF)
+log(DEBUG_REDUCE)
+log(DEBUG_NORM)
+log(GET_STATS)
 
-# Configure PIN
-set(AMCL_MAXPIN 10000 CACHE STRING "Maximum PIN value. See ./include/mpin_ZZZ.h for explanation")
-set(AMCL_PBLEN 14 CACHE STRING "Maximum PIN value in bits. See ./include/mpin_ZZZ.h for explanation")
-message(STATUS "AMCL_MAXPIN=${AMCL_MAXPIN}")
+### /include subdir ###
+set(AMCL_INCLUDE_SUBDIR "" CACHE STRING "Subdir of 'include' to install headers in")
+set(INSTALL_INCLUDESUBDIR "${CMAKE_INSTALL_INCLUDEDIR}/${AMCL_INCLUDE_SUBDIR}")
+log(AMCL_INCLUDE_SUBDIR)
+log(CMAKE_INSTALL_INCLUDEDIR)
+log(INSTALL_INCLUDESUBDIR)
 
-if(AMCL_CURVE MATCHES "NIST256" OR AMCL_CURVE MATCHES "C25519" OR AMCL_CURVE MATCHES "NIST384" OR AMCL_CURVE MATCHES "NIST521")
-  message(STATUS "Build x.509")
-  set(BUILD_X509 ON)
-endif(AMCL_CURVE MATCHES "NIST256" OR AMCL_CURVE MATCHES "C25519" OR AMCL_CURVE MATCHES "NIST384" OR AMCL_CURVE MATCHES "NIST521")
+### Word/Chunk Size ###
+determine_word_size(DEFAULT_WORD_SIZE)
+set(WORD_SIZE ${DEFAULT_WORD_SIZE} CACHE STRING "Word length in bits. See ./include/arch.h")
+set_property(CACHE WORD_SIZE PROPERTY STRINGS "16;32;64")
+log(WORD_SIZE)
 
-if(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
-  message(STATUS "Curve choice prevents MPIN being built")
-  set(BUILD_MPIN OFF)
-endif(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
+if(WORD_SIZE STREQUAL "")
+  message(FATAL_ERROR "Must explicitly set WORD_SIZE.")
+endif()
 
-if(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
-  message(STATUS "Curve choice prevents WCC being built")
-  set(BUILD_WCC OFF)
-endif(NOT(AMCL_CURVE MATCHES "BN" OR AMCL_CURVE MATCHES "BLS"))
+### RSA Levels ###
+amcl_supported_rsa_levels(AMCL_RSA_LEVELS ${WORD_SIZE})
+set(AMCL_RSA "${AMCL_RSA_LEVELS}" CACHE STRING "RSA levels of security supported. See ./include/rsa_WWW.h")
+set_property(CACHE AMCL_RSA PROPERTY STRINGS ${AMCL_RSA_LEVELS})
+string(REPLACE "," ";" AMCL_RSA "${AMCL_RSA}")
+log(AMCL_RSA)
 
-# test configuration
+### Curves ###
+amcl_supported_curves(AMCL_CURVE_NAMES ${WORD_SIZE})
+set(AMCL_CURVE "${AMCL_CURVE_NAMES}" CACHE STRING "Choice of Field. See ./include/amcl.h")
+set_property(CACHE AMCL_CURVE PROPERTY STRINGS ${AMCL_CURVE_NAMES})
+string(REPLACE "," ";" AMCL_CURVE "${AMCL_CURVE}")
+log(AMCL_CURVE)
+
+### MPIN ###
+if(BUILD_MPIN)
+  set(AMCL_MAXPIN 10000 CACHE STRING "Maximum PIN value. See ./include/mpin_ZZZ.h for explanation.")
+  set(AMCL_PBLEN 14 CACHE STRING "Maximum PIN value in bits. See ./include/mpin_ZZZ.h for explanation.")
+  log(AMCL_MAXPIN)
+  log(AMCL_PBLEN)
+endif()
+
+### PBC ###
 if(BUILD_MPIN OR BUILD_WCC)
-  set(PBC_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN time permits")
-  set(PBC_RANDOM_TESTS 10 CACHE STRING "Number of random M-PIN tests")
-  message(STATUS "PBC_TIME_PERMIT_TESTS=${PBC_TIME_PERMIT_TESTS}")
-  message(STATUS "PBC_RANDOM_TESTS=${PBC_RANDOM_TESTS}")
-endif(BUILD_MPIN OR BUILD_WCC)
+  set(PBC_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN/WCC time permits")
+  set(PBC_RANDOM_TESTS 5 CACHE STRING "Number of random M-PIN/WCC tests")
+  log(PBC_TIME_PERMIT_TESTS)
+  log(PBC_RANDOM_TESTS)
+endif()
 
-# Add subdirectories
-add_subdirectory(include)
-add_subdirectory(src)
-add_subdirectory(examples)
-add_subdirectory(test)
-add_subdirectory(benchmark)
+##################################################
+# AMCL_Core Library
+##################################################
+amcl_configure_file_core(include/amcl.h.in include/amcl.h amcl_core_GEN_HDRS)
+amcl_configure_file_core(include/arch.h.in include/arch.h amcl_core_GEN_HDRS)
 
-# Only build Python for shared libs
-if (NOT BUILD_SHARED_LIBS)
-  set(BUILD_PYTHON OFF)
-endif (NOT BUILD_SHARED_LIBS)
+amcl_generate_SC(SC)
+amcl_generate_RSL(RSL)
+amcl_configure_file_core(include/version.h.in include/version.h amcl_core_GEN_HDRS)
+unset(SC)
+unset(RSL)
 
-if (BUILD_PYTHON)
-  message(STATUS "Build Python CFFI")
-  execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()" OUTPUT_VARIABLE PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; from os.path import dirname; print dirname(get_python_lib())" OUTPUT_VARIABLE PYTHON_SITE_LIB OUTPUT_STRIP_TRAILING_WHITESPACE)
+add_library(amcl_core
+  src/hash.c
+  src/rand.c
+  src/randapi.c
+  src/aes.c
+  src/gcm.c
+  src/oct.c
+  src/utils.c
+  src/version.c
+)
+list(APPEND AMCL_LIBRARIES amcl_core)
 
-  add_subdirectory (wrappers/python)
-endif (BUILD_PYTHON)
+set_target_properties(amcl_core PROPERTIES
+  EXPORT_NAME core
+  VERSION ${AMCL_VERSION}
+  SOVERSION ${AMCL_SOVERSION}
+)
 
-if (BUILD_GO)
-  set(GO_PATH "$ENV{GOPATH}" CACHE STRING "GOPATH")
-  message(STATUS "Build Golang: GOPATH='${GO_PATH}'")
-  add_subdirectory (wrappers/go)
-  add_subdirectory (wrappers/go/examples)
-endif (BUILD_GO)
+target_include_directories(amcl_core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
-# Build Documentation
-if (BUILD_DOXYGEN)
-  find_package(Doxygen QUIET)
-  if(DOXYGEN_FOUND)
-    add_subdirectory (doc)
-  else(DOXYGEN_FOUND)
-    message(STATUS "Doxygen not found. Documentation will not be built.")
-  endif(DOXYGEN_FOUND)
-endif (BUILD_DOXYGEN)
+install(TARGETS amcl_core
+  EXPORT AMCLTargets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 
-message(STATUS "Install ${CMAKE_INSTALL_PREFIX}")
+install(FILES
+  ${amcl_core_GEN_HDRS}
+  include/utils.h
+  include/randapi.h
+  DESTINATION ${INSTALL_INCLUDESUBDIR}
+)
 
-# uninstall target
+if (BUILD_MPIN OR BUILD_WCC)
+  amcl_configure_file_core(include/config_test.h.in include/config_test.h amcl_core_pbc_GEN_HDRS)
+
+  target_sources(amcl_core PRIVATE src/pbc_support.c)
+
+  install(FILES
+    ${amcl_core_pbc_GEN_HDRS}
+    include/pbc_support.h
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endif()
+
+if (NOT AMCL_RSA STREQUAL "")
+  target_sources(amcl_core PRIVATE src/rsa_support.c)
+
+  install(FILES
+    include/rsa_support.h
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endif()
+
+if (NOT AMCL_CURVE STREQUAL "")
+  target_sources(amcl_core PRIVATE src/ecdh_support.c)
+
+  install(FILES
+    include/ecdh_support.h
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endif()
+
+##################################################
+# AMCL_X509 Library
+##################################################
+if(BUILD_X509)
+  message(STATUS "Build libamcl_x509")
+  add_library(amcl_x509
+    src/x509.c
+  )
+  list(APPEND AMCL_LIBRARIES amcl_x509)
+
+  set_target_properties(amcl_x509 PROPERTIES
+    EXPORT_NAME x509
+    VERSION ${AMCL_VERSION}
+    SOVERSION ${AMCL_SOVERSION}
+  )
+
+  target_include_directories(amcl_x509 PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_link_libraries(amcl_x509 PUBLIC
+    amcl_core
+  )
+
+  install(TARGETS amcl_x509
+    EXPORT AMCLTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install(FILES
+    include/x509.h
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endif()
+
+##################################################
+# AMCL_RSA_*** Libraries
+##################################################
+foreach(level ${AMCL_RSA})
+  amcl_rsa_field(BD "${level}")
+  amcl_rsa_field(TFF "${level}")
+
+  amcl_configure_file_rsa(include/config_big.h.in include/config_big_${BD}.h "${level}" amcl_rsa_${level}_GEN_HDRS)
+  amcl_configure_file_rsa(include/config_ff.h.in  include/config_ff_${TFF}.h "${level}" amcl_rsa_${level}_GEN_HDRS)
+  amcl_configure_file_rsa(include/big.h.in        include/big_${BD}.h        "${level}" amcl_rsa_${level}_GEN_HDRS)
+  amcl_configure_file_rsa(include/ff.h.in         include/ff_${TFF}.h        "${level}" amcl_rsa_${level}_GEN_HDRS)
+  amcl_configure_file_rsa(include/rsa.h.in        include/rsa_${TFF}.h       "${level}" amcl_rsa_${level}_GEN_HDRS)
+
+  amcl_configure_file_rsa(src/big.c.in src/big_${BD}.c  "${level}" amcl_rsa_${level}_GEN_SRCS)
+  amcl_configure_file_rsa(src/ff.c.in  src/ff_${TFF}.c  "${level}" amcl_rsa_${level}_GEN_SRCS)
+  amcl_configure_file_rsa(src/rsa.c.in src/rsa_${TFF}.c "${level}" amcl_rsa_${level}_GEN_SRCS)
+
+  message(STATUS "Build libamcl_rsa_${TFF}")
+  add_library(amcl_rsa_${level}
+    ${amcl_rsa_${level}_GEN_SRCS}
+  )
+  list(APPEND AMCL_LIBRARIES amcl_rsa_${TFF})
+
+  set_target_properties(amcl_rsa_${level} PROPERTIES
+    EXPORT_NAME rsa_${level}
+    VERSION ${AMCL_VERSION}
+    SOVERSION ${AMCL_SOVERSION}
+  )
+
+  target_include_directories(amcl_rsa_${level} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_link_libraries(amcl_rsa_${level} PUBLIC
+    amcl_core
+  )
+
+  install(TARGETS amcl_rsa_${level}
+    EXPORT AMCLTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install(FILES
+    ${amcl_rsa_${level}_GEN_HDRS}
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+
+endforeach()
+
+##################################################
+# AMCL_CURVE_*** Libraries
+##################################################
+foreach(curve ${AMCL_CURVE})
+  amcl_curve_field(BD "${curve}")
+  amcl_curve_field(PF "${curve}")
+  amcl_curve_field(TC "${curve}")
+  amcl_curve_field(TF "${curve}")
+
+  amcl_configure_file_curve(include/big.h.in          include/big_${BD}.h          "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/config_big.h.in   include/config_big_${BD}.h   "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/config_field.h.in include/config_field_${TF}.h "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/config_curve.h.in include/config_curve_${TC}.h "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/fp.h.in           include/fp_${TF}.h           "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/ecdh.h.in         include/ecdh_${TC}.h         "${curve}" amcl_curve_${TC}_GEN_HDRS)
+  amcl_configure_file_curve(include/ecp.h.in          include/ecp_${TC}.h          "${curve}" amcl_curve_${TC}_GEN_HDRS)
+
+  amcl_configure_file_curve(src/big.c.in  src/big_${BD}.c  "${curve}" amcl_curve_${TC}_GEN_SRCS)
+  amcl_configure_file_curve(src/fp.c.in   src/fp_${TF}.c   "${curve}" amcl_curve_${TC}_GEN_SRCS)
+  amcl_configure_file_curve(src/ecp.c.in  src/ecp_${TC}.c  "${curve}" amcl_curve_${TC}_GEN_SRCS)
+  amcl_configure_file_curve(src/ecdh.c.in src/ecdh_${TC}.c "${curve}" amcl_curve_${TC}_GEN_SRCS)
+
+  message(STATUS "Build libamcl_curve_${TC}")
+  add_library(amcl_curve_${TC}
+    ${amcl_curve_${TC}_GEN_SRCS}
+    src/rom_curve_${TC}.c
+    src/rom_field_${TF}.c
+  )
+  list(APPEND AMCL_LIBRARIES amcl_curve_${TC})
+
+  set_target_properties(amcl_curve_${TC} PROPERTIES
+    EXPORT_NAME curve_${TC}
+    VERSION ${AMCL_VERSION}
+    SOVERSION ${AMCL_SOVERSION}
+  )
+
+  target_include_directories(amcl_curve_${TC} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_link_libraries(amcl_curve_${TC} PUBLIC
+    amcl_core
+  )
+
+  install(TARGETS amcl_curve_${TC}
+    EXPORT AMCLTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install(FILES
+    ${amcl_curve_${TC}_GEN_HDRS}
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endforeach()
+
+##################################################
+# AMCL_PAIRING_*** Libraries
+##################################################
+foreach(curve ${AMCL_CURVE})
+  amcl_curve_field(PF "${curve}")
+  amcl_curve_field(TC "${curve}")
+  amcl_curve_field(TF "${curve}")
+  amcl_curve_field(CS "${curve}")
+
+  if(NOT(PF STREQUAL "NOT"))
+    amcl_configure_file_curve(include/fp2.h.in  include/fp2_${TF}.h  "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+    amcl_configure_file_curve(include/fp4.h.in  include/fp4_${TF}.h  "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+    amcl_configure_file_curve(src/fp2.c.in  src/fp2_${TC}.c  "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    amcl_configure_file_curve(src/fp4.c.in  src/fp4_${TC}.c  "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+
+    if(CS STREQUAL "128")
+      amcl_configure_file_curve(include/fp12.h.in include/fp12_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/ecp2.h.in include/ecp2_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/pair.h.in include/pair_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+      amcl_configure_file_curve(src/fp12.c.in src/fp12_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/ecp2.c.in src/ecp2_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/pair.c.in src/pair_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    elseif(CS STREQUAL "192")
+      amcl_configure_file_curve(include/fp8.h.in include/fp8_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/fp24.h.in include/fp24_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/ecp4.h.in include/ecp4_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/pair192.h.in include/pair192_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+      amcl_configure_file_curve(src/fp8.c.in src/fp8_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/fp24.c.in src/fp24_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/ecp4.c.in src/ecp4_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/pair192.c.in src/pair192_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    elseif(CS STREQUAL "256")
+      amcl_configure_file_curve(include/fp8.h.in include/fp8_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/fp16.h.in include/fp16_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/fp48.h.in include/fp48_${TF}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/ecp8.h.in include/ecp8_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+      amcl_configure_file_curve(include/pair256.h.in include/pair256_${TC}.h "${curve}" amcl_pairing_${TC}_GEN_HDRS)
+
+      amcl_configure_file_curve(src/fp8.c.in src/fp8_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/fp16.c.in src/fp16_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/fp48.c.in src/fp48_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/ecp8.c.in src/ecp8_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+      amcl_configure_file_curve(src/pair256.c.in src/pair256_${TC}.c "${curve}" amcl_pairing_${TC}_GEN_SRCS)
+    endif(CS STREQUAL "128")
+
+    message(STATUS "Build libamcl_pairing_${TC}")
+    add_library(amcl_pairing_${TC}
+      ${amcl_pairing_${TC}_GEN_SRCS}
+    )
+    list(APPEND AMCL_LIBRARIES amcl_pairing_${TC})
+
+    set_target_properties(amcl_pairing_${TC} PROPERTIES
+      EXPORT_NAME pairing_${TC}
+      VERSION ${AMCL_VERSION}
+      SOVERSION ${AMCL_SOVERSION}
+    )
+
+    target_include_directories(amcl_pairing_${TC} PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+
+    target_link_libraries(amcl_pairing_${TC} PUBLIC
+      amcl_curve_${TC}
+    )
+
+    install(TARGETS amcl_pairing_${TC}
+      EXPORT AMCLTargets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+
+    install(FILES
+      ${amcl_pairing_${TC}_GEN_HDRS}
+      DESTINATION ${INSTALL_INCLUDESUBDIR}
+    )
+  endif(NOT(PF STREQUAL "NOT"))
+endforeach()
+
+##################################################
+# AMCL_MPIN_*** Libraries
+##################################################
+if(BUILD_MPIN)
+  foreach(curve ${AMCL_CURVE})
+    amcl_curve_field(TC "${curve}")
+    amcl_curve_field(CS "${curve}")
+
+    if(TARGET amcl_pairing_${TC})
+      if(CS STREQUAL "128")
+        amcl_configure_file_curve(include/mpin.h.in include/mpin_${TC}.h "${curve}" amcl_mpin_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/mpin.c.in     src/mpin_${TC}.c     "${curve}" amcl_mpin_${TC}_GEN_SRCS)
+      else(CS STREQUAL "128")
+        amcl_configure_file_curve(include/mpin${CS}.h.in include/mpin${CS}_${TC}.h "${curve}" amcl_mpin_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/mpin${CS}.c.in     src/mpin${CS}_${TC}.c     "${curve}" amcl_mpin_${TC}_GEN_SRCS)
+      endif(CS STREQUAL "128")
+
+      message(STATUS "Build libamcl_mpin_${TC}")
+      add_library(amcl_mpin_${TC}
+        ${amcl_mpin_${TC}_GEN_SRCS}
+      )
+      list(APPEND AMCL_LIBRARIES amcl_mpin_${TC})
+
+      set_target_properties(amcl_mpin_${TC} PROPERTIES
+        EXPORT_NAME mpin_${TC}
+        VERSION ${AMCL_VERSION}
+        SOVERSION ${AMCL_SOVERSION}
+      )
+
+      target_include_directories(amcl_mpin_${TC} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+
+      target_link_libraries(amcl_mpin_${TC} PUBLIC
+        amcl_pairing_${TC}
+      )
+
+      install(TARGETS amcl_mpin_${TC}
+        EXPORT AMCLTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      )
+
+      install(FILES
+        ${amcl_mpin_${TC}_GEN_HDRS}
+        DESTINATION ${INSTALL_INCLUDESUBDIR}
+      )
+    endif()
+  endforeach()
+endif()
+
+##################################################
+# AMCL_WCC_*** Libraries
+##################################################
+if(BUILD_WCC)
+  foreach(curve ${AMCL_CURVE})
+    amcl_curve_field(TC "${curve}")
+    amcl_curve_field(CS "${curve}")
+
+    if(TARGET amcl_pairing_${TC})
+      if(CS STREQUAL "128")
+        amcl_configure_file_curve(include/wcc.h.in include/wcc_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/wcc.c.in     src/wcc_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
+      else(CS STREQUAL "128")
+        amcl_configure_file_curve(include/wcc${CS}.h.in include/wcc${CS}_${TC}.h "${curve}" amcl_wcc_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/wcc${CS}.c.in     src/wcc${CS}_${TC}.c     "${curve}" amcl_wcc_${TC}_GEN_SRCS)
+      endif(CS STREQUAL "128")
+
+      message(STATUS "Build libamcl_wcc_${TC}")
+      add_library(amcl_wcc_${TC}
+        ${amcl_wcc_${TC}_GEN_SRCS}
+      )
+      list(APPEND AMCL_LIBRARIES amcl_wcc_${TC})
+
+      set_target_properties(amcl_wcc_${TC} PROPERTIES
+        EXPORT_NAME wcc_${TC}
+        VERSION ${AMCL_VERSION}
+        SOVERSION ${AMCL_SOVERSION}
+      )
+
+      target_include_directories(amcl_wcc_${TC} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+
+      target_link_libraries(amcl_wcc_${TC} PUBLIC
+        amcl_pairing_${TC}
+      )
+
+      install(TARGETS amcl_wcc_${TC}
+        EXPORT AMCLTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      )
+
+      install(FILES
+        ${amcl_wcc_${TC}_GEN_HDRS}
+        DESTINATION ${INSTALL_INCLUDESUBDIR}
+      )
+    endif()
+  endforeach()
+endif()
+
+##################################################
+# pkgconfig
+##################################################
+foreach(lib ${AMCL_LIBRARIES})
+  set(AMCL_PRIVATE_LIBS "${AMCL_PRIVATE_LIBS} -l${lib}")
+endforeach()
+configure_file(amcl.pc.in amcl.pc @ONLY)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/amcl.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
+##################################################
+# CMake export
+##################################################
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/amcl)
+
+install(EXPORT AMCLTargets
+  FILE AMCLTargets.cmake
+  NAMESPACE AMCL::
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/AMCLConfigVersion.cmake
+  VERSION ${AMCL_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/AMCLConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/AMCLConfig.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/AMCLConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/AMCLConfigVersion.cmake
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+##################################################
+# Uninstall Target
+##################################################
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
@@ -182,47 +650,32 @@ configure_file(
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-# Build a CPack driven installer package
-include (InstallRequiredSystemLibraries)
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_NAME "AMCL")
-set(CPACK_PACKAGE_RELEASE 1)
-set(CPACK_PACKAGE_CONTACT "support@miracl.com")
-set(CPACK_PACKAGE_VENDOR "MIRACL")
-if (BUILD_PYTHON)
-  set(CPACK_RPM_PACKAGE_REQUIRES "python >= 2.7.0")
-endif (BUILD_PYTHON)
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_PACKAGE_RELEASE}.${CMAKE_SYSTEM_PROCESSOR}")
+##################################################
+# Add subdirectories
+##################################################
+if(BUILD_BENCHMARKS)
+  message(STATUS "Build benchmarks")
+  add_subdirectory(benchmark)
+endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  # Linux specific code
-  set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-  # Prevents CPack from generating file conflicts
-  set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX}")
-  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX}/bin")
-  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX}/include")
-  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${CPACK_PACKAGING_INSTALL_PREFIX}/lib")
-  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${PYTHON_SITE_LIB}")
-  list(APPEND CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "${PYTHON_SITE_PACKAGES}")
-  set(CPACK_GENERATOR "RPM")
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(BUILD_DOCS)
+  message(STATUS "Build docs")
+  add_subdirectory(doc)
+endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-  # Windows specific code
-  set(CPACK_PACKAGE_INSTALL_DIRECTORY "AMCL")
-  set(CPACK_NSIS_MODIFY_PATH ON)
-  set(CPACK_PACKAGE_ICON "${CMAKE_SOURCE_DIR}/resources/icon\\\\icon.bmp")
-  set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/resources/icon\\\\icon.ico")
-  set(CPACK_NSIS_MUI_UNIICON "${CMAKE_SOURCE_DIR}/resources/icon\\\\icon.ico")
-  set(CPACK_NSIS_HELP_LINK "http://www.miracl.com")
-  set(CPACK_NSIS_URL_INFO_ABOUT "http://www.miracl.com")
-  set(CPACK_NSIS_CONTACT "support@miracl.com")
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+if(BUILD_EXAMPLES)
+  message(STATUS "Build examples")
+  add_subdirectory(examples)
+endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  # Mac OS X specific code
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if(BUILD_PYTHON)
+  message(STATUS "Build Python wrappers")
+  add_subdirectory(wrappers/python)
+endif()
 
-include (CPack)
+if(BUILD_TESTING)
+  message(STATUS "Build tests")
+  add_subdirectory(test)
+endif()
 
+include(CPackConfig.cmake)

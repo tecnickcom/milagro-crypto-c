@@ -69,81 +69,65 @@ under the License.
 // Define some OIDs
 
 // Elliptic Curve with SHA256
-static char eccsha256[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x02};
-static octet ECCSHA256= {8,sizeof(eccsha256),eccsha256};
+static unsigned char eccsha256[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x02};
+static octet ECCSHA256= {8,sizeof(eccsha256),(char *)eccsha256};
 
 // Elliptic Curve with SHA384
-static char eccsha384[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x03};
-static octet ECCSHA384= {8,sizeof(eccsha384),eccsha384};
+static unsigned char eccsha384[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x03};
+static octet ECCSHA384= {8,sizeof(eccsha384),(char *)eccsha384};
 
 // Elliptic Curve with SHA512
-static char eccsha512[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x04};
-static octet ECCSHA512= {8,sizeof(eccsha512),eccsha512};
+static unsigned char eccsha512[8]= {0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x04};
+static octet ECCSHA512= {8,sizeof(eccsha512),(char *)eccsha512};
 
 // EC Public Key
-static char ecpk[7]= {0x2a,0x86,0x48,0xce,0x3d,0x02,0x01};
-static octet ECPK= {7,sizeof(ecpk),ecpk};
+static unsigned char ecpk[7]= {0x2a,0x86,0x48,0xce,0x3d,0x02,0x01};
+static octet ECPK= {7,sizeof(ecpk),(char *)ecpk};
 
 // C25519 curve
-static char prime25519[9]= {0x2B,0x06,0x01,0x04,0x01,0xDA,0x47,0x0F,0x01}; /*****/
-static octet PRIME25519= {9,sizeof(prime25519),prime25519};
+static unsigned char prime25519[9]= {0x2B,0x06,0x01,0x04,0x01,0xDA,0x47,0x0F,0x01}; /*****/
+static octet PRIME25519= {9,sizeof(prime25519),(char *)prime25519};
 
 // NIST256 curve
-static char prime256v1[8]= {0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,0x07};
-static octet PRIME256V1= {8,sizeof(prime256v1),prime256v1};
+static unsigned char prime256v1[8]= {0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,0x07};
+static octet PRIME256V1= {8,sizeof(prime256v1),(char *)prime256v1};
 
 // NIST384 curve
-static char secp384r1[5]= {0x2B,0x81,0x04,0x00,0x22};
-static octet SECP384R1= {5,sizeof(secp384r1),secp384r1};
+static unsigned char secp384r1[5]= {0x2B,0x81,0x04,0x00,0x22};
+static octet SECP384R1= {5,sizeof(secp384r1),(char *)secp384r1};
 
 // NIST521 curve
-static char secp521r1[5]= {0x2B,0x81,0x04,0x00,0x23};
-static octet SECP521R1= {5,sizeof(secp521r1),secp521r1};
+static unsigned char secp521r1[5]= {0x2B,0x81,0x04,0x00,0x23};
+static octet SECP521R1= {5,sizeof(secp521r1),(char *)secp521r1};
 
 // RSA Public Key
-static char rsapk[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x01};
-static octet RSAPK= {9,sizeof(rsapk),rsapk};
+static unsigned char rsapk[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x01};
+static octet RSAPK= {9,sizeof(rsapk),(char *)rsapk};
 
 // RSA with SHA256
-static char rsasha256[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0b};
-static octet RSASHA256= {9,sizeof(rsasha256),rsasha256};
+static unsigned char rsasha256[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0b};
+static octet RSASHA256= {9,sizeof(rsasha256),(char *)rsasha256};
 
 // RSA with SHA384
-static char rsasha384[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0c};
-static octet RSASHA384= {9,sizeof(rsasha384),rsasha384};
+static unsigned char rsasha384[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0c};
+static octet RSASHA384= {9,sizeof(rsasha384),(char *)rsasha384};
 
 // RSA with SHA512
-static char rsasha512[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0d};
-static octet RSASHA512= {9,sizeof(rsasha512),rsasha512};
+static unsigned char rsasha512[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x0d};
+static octet RSASHA512= {9,sizeof(rsasha512),(char *)rsasha512};
 
 #ifdef HAS_MAIN
 // countryName
-static char cn[3]= {0x55,0x04,0x06};
-static octet CN= {3,sizeof(cn),cn};
-
-// stateName
-// static char sn[3]= {0x55,0x04,0x08};
-// static octet SN= {3,sizeof(sn),sn};
-
-// localName
-// static char ln[3]= {0x55,0x04,0x07};
-// static octet LN= {3,sizeof(ln),ln};
+static unsigned char cn[3]= {0x55,0x04,0x06};
+static octet CN= {3,sizeof(cn),(char *)cn};
 
 // orgName
-static char on[3]= {0x55,0x04,0x0A};
-static octet ON= {3,sizeof(on),on};
-
-// unitName
-// static char un[3]= {0x55,0x04,0x0B};
-// static octet UN= {3,sizeof(un),un};
-
-// myName
-// static char mn[3]= {0x55,0x04,0x03};
-// static octet MN= {3,sizeof(mn),mn};
+static unsigned char on[3]= {0x55,0x04,0x0A};
+static octet ON= {3,sizeof(on),(char *)on};
 
 // emailName
-static char en[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x09,0x01};
-static octet EN= {9,sizeof(en),en};
+static unsigned char en[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x09,0x01};
+static octet EN= {9,sizeof(en),(char *)en};
 #endif // HAS_MAIN
 
 /* Check expected TAG and return ASN.1 field length. If tag=0 skip check. */
@@ -222,7 +206,7 @@ pktype X509_extract_cert_sig(octet *sc,octet *sig)
 
     sj=j+len; // Needed to jump over signature OID
 
-// dive in to extract OID
+    // dive in to extract OID
     len=getalen(OID,sc->val,j);
     if (len<0) return ret;
     j+=skip(len);
@@ -440,9 +424,9 @@ pktype X509_extract_public_key(octet *c,octet *key)
     if (len<0) return ret;
     j+=skip(len);
 
-// ** Maybe dive in and check Public Key OIDs here?
-// ecpublicKey & prime256v1, secp384r1 or secp521r1 for ECC
-// rsapublicKey for RSA
+    // ** Maybe dive in and check Public Key OIDs here?
+    // ecpublicKey & prime256v1, secp384r1 or secp521r1 for ECC
+    // rsapublicKey for RSA
 
     sj=j+len;
 
@@ -495,7 +479,7 @@ pktype X509_extract_public_key(octet *c,octet *key)
     j++;
     len--; // skip bit shift (hopefully 0!)
 
-// extract key
+    // extract key
     if (ret.type==ECC)
     {
         key->len=len;

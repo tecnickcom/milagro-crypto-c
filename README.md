@@ -1,18 +1,13 @@
 # AMCL - *Apache Milagro Crypto Library*
 
-[![Master Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/miracl/milagro-crypto-c/tree/master)
-[![Master Build Status](https://secure.travis-ci.org/miracl/milagro-crypto-c.png?branch=master)](https://travis-ci.org/miracl/milagro-crypto-c?branch=master)
-[![Master Coverage Status](https://coveralls.io/repos/miracl/milagro-crypto-c/badge.svg?branch=master&service=github)](https://coveralls.io/github/miracl/milagro-crypto-c?branch=master)
-
-[![Develop Branch](https://img.shields.io/badge/-develop:-gray.svg)](https://github.com/miracl/milagro-crypto-c/tree/develop)
-[![Develop Build Status](https://secure.travis-ci.org/miracl/milagro-crypto-c.png?branch=develop)](https://travis-ci.org/miracl/milagro-crypto-c?branch=develop)
-[![Develop Coverage Status](https://coveralls.io/repos/miracl/milagro-crypto-c/badge.svg?branch=develop&service=github)](https://coveralls.io/github/miracl/milagro-crypto-c?branch=develop)
-
+[![Branch](https://img.shields.io/badge/-master:-gray.svg)](https://github.com/milagro-crypto/milagro-crypto-c/tree/master)
+[![Build Status](https://travis-ci.org/milagro-crypto/milagro-crypto-c.svg?branch=master)](https://travis-ci.org/milagro-crypto/milagro-crypto-c)
+[![Coverage Status](https://coveralls.io/repos/github/milagro-crypto/milagro-crypto-c/badge.svg?branch=master)](https://coveralls.io/github/milagro-crypto/milagro-crypto-c?branch=master)
 
 * **category**:    Library
-* **copyright**:   2016 The Apache Software Foundation
+* **copyright**:   2018 The Apache Software Foundation
 * **license**:     ASL 2.0 ([Apache License Version 2.0, January 2004](http://www.apache.org/licenses/LICENSE-2.0))
-* **link**:        https://github.com/miracl/milagro-crypto-c
+* **link**:        https://github.com/milagro-crypto/milagro-crypto-c
 * **introduction**: [AMCL.pdf](doc/AMCL.pdf)
 
 
@@ -24,7 +19,7 @@ AMCL is a standards compliant C cryptographic library with no external dependenc
 
 For a detailed explanation about this library please read: [doc/AMCL.pdf](doc/AMCL.pdf)
 
-AMCL is provided in *C* language but includes a *[Python](https://www.python.org)* and *[GO](https://golang.org)* wrapper.
+AMCL is provided in *C* language but includes a *[Python](https://www.python.org)* wrapper for some modules to aid development work.
 
 NOTE: This product includes software developed at *[The Apache Software Foundation](http://www.apache.org/)*.
 
@@ -35,8 +30,7 @@ In order to build this library, the following packages are required:
 * [CMake](https://cmake.org/) is required to build the source code.
 * [CFFI](https://cffi.readthedocs.org/en/release-0.8/), the C Foreign Function Interface for Python is required in order to execute tests.
 * [Doxygen](http://doxygen.org) is required to build the source code documentation.
-* [GO](https://golang.org/dl/) and [Python](https://www.python.org/) languages are required to build the language wrappers.
-* Please refer to the *resources/DockerDev/Dockerfile* file for any additional dependency.
+* [Python](https://www.python.org/) language is required to build the Python language wrapper.
 
 
 The above packages can be installed in different ways, depending on the Operating System used:
@@ -56,7 +50,7 @@ The above packages can be installed in different ways, depending on the Operatin
     sudo pip install cffi
 
 
-* **MacOs**
+* **MacOS**
 
 
     ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -89,20 +83,11 @@ the library.
 
     make
 
-If you are using GO then you must set the GOPATH first. Note that there can 
-only be one entry in the GOPATH 
-
-    export GOPATH=${HOME}/src
-    make
-
-If you have docker installed then type ```make dbuild``` to build and test
-the library in a docker container.
-
 ##### Multiple curves and RSA security levels
 
-The default build (see config.mk) uses multiple curves and RSA security 
-levels. There is an example called testall.c in the examples directory that 
-shows how to write a program to use the different curves etc in a single 
+The default build (see config.mk) uses multiple curves and RSA security
+levels. There is an example called testall.c in the examples directory that
+shows how to write a program to use the different curves etc in a single
 program. To build and run the example use this script;
 
     buildMulti.sh
@@ -111,12 +96,11 @@ program. To build and run the example use this script;
 
 NOTE: The default build is for 64 bit machines
 
-    git clone https://github.com/miracl/milagro-crypto-c
+    git clone https://github.com/milagro-crypto/milagro-crypto-c
     cd milagro-crypto-c
     mkdir -p target/build
     cd target/build
     cmake -D CMAKE_INSTALL_PREFIX=/opt/amcl ../..
-    export GOPATH=${HOME}/src
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./
     make
     make test
@@ -147,7 +131,7 @@ To list other available CMake options, use:
 
     sudo make uninstall
 
-##### Building an installer 
+##### Building an installer
 
 After having built the libraries you can build a binary installer and a source distribution by running this command
 
@@ -158,7 +142,7 @@ After having built the libraries you can build a binary installer and a source d
 
 Start a command prompt as an administrator
 
-    git clone https://github.com/miracl/milagro-crypto-c
+    git clone https://github.com/milagro-crypto/milagro-crypto-c
     cd milagro-crypto-c
     mkdir target\build
     cd target\build
@@ -188,34 +172,31 @@ After having built the libraries you can build a Windows installer using this co
 
 In order for this to work NSSI has to have been installed
 
-
 ## Contributions
 
-This project includes a Makefile that allows you to test and build the project in a Linux-compatible system with simple commands.  
-All the artifacts and reports produced using this Makefile are stored in the *target* folder.  
+This project includes a Makefile that allows you to test and build the project in a Linux-compatible system with simple commands.
+All the artifacts and reports produced using this Makefile are stored in the *target* folder.
 
-All the packages listed in the *resources/DockerDev/Dockerfile* file are required in order to build and test all the library options in the current environment. Alternatively, everything can be built inside a [Docker](https://www.docker.com) container using the command "MAKETARGET=buildall make dbuild".
+All the packages listed in the *Dockerfile* are required in order to build and test all the library options in the current environment. Alternatively, everything can be built inside a [Docker](https://www.docker.com) container using the command "make -f Makefile.docker buildall".
 
 To see all available options:
 ```
 make help
 ```
 
-To build the project inside a Docker container (requires Docker):
+To build the builder Docker image:
 ```
-MAKETARGET=buildall make dbuild
+make -f Makefile.docker
+```
+
+To build the project inside a Docker container (requires Docker) you need to build a builder image (once), and then build the project in its context:
+```
+make -f Makefile.docker buildall
 ```
 
 To build a particular set of predefined makefile options inside a Docker container:
 ```
-MAKETARGET='build TYPE=LINUX_64BIT_NIST256_RSA2048' make dbuild
-```
-The list of pre-defined options can be listed by typing ```make help```
-
-
-The base Docker building environment is defined in the following Dockerfile:
-```
-resources/DockerDev/Dockerfile
+make -f Makefile.docker build TYPE=LINUX_64BIT_NIST256_RSA2048
 ```
 
 To execute all the test builds and generate reports in the current environment:
@@ -226,41 +207,4 @@ make qa
 To format the code (please use this command before submitting any pull request):
 ```
 make format
-```
-
-## Useful Docker commands
-
-To manually create the container you can execute:
-```
-docker build --tag="miracl/amcldev" .
-```
-
-To log into the newly created container:
-```
-docker run -t -i miracl/amcldev /bin/bash
-```
-
-To get the container ID:
-```
-CONTAINER_ID=`docker ps -a | grep miracl/amcldev | cut -c1-12`
-```
-
-To delete the newly created docker container:
-```
-docker rm -f $CONTAINER_ID
-```
-
-To delete the docker image:
-```
-docker rmi -f miracl/amcldev
-```
-
-To delete all containers
-```
-docker rm $(docker ps -a -q)
-```
-
-To delete all images
-```
-docker rmi $(docker images -q)
 ```

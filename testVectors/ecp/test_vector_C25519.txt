@@ -1,5 +1,6 @@
-#Choice:=C25519; Type:= MONTGOMERY
-#Modulus := 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed; A:=486662; B:=1;
+# Choice:=C25519; Type:= MONTGOMERY
+# Modulus := 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed; 
+# A:=486662; B:=1;
 
 #test1
 ECP1 = 03DC0160BA615A5063A5C91ED23916F27365D690758FC141F959B073EFD99F19:01

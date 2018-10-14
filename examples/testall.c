@@ -24,7 +24,7 @@ under the License.
 #include <string.h>
 #include <time.h>
 #include "ecdh_ED25519.h"
-#include "mpin_BN254.h"
+#include "mpin_BN254CX.h"
 #include "rsa_2048.h"
 #include "rsa_3072.h"
 #include "randapi.h"
@@ -505,7 +505,7 @@ int ecdh_GOLDILOCKS(csprng *RNG)
 #define PINERROR // For PIN ERROR detection ON or OFF 
 #define FULL     // for M-Pin Full or M-Pin regular 
 
-int mpin_BN254(csprng *RNG)
+int mpin_BN254CX(csprng *RNG)
 {
     int i,pin,rtn,err;
 #ifdef PERMITS
@@ -514,12 +514,12 @@ int mpin_BN254(csprng *RNG)
     int date=0;
 #endif
     unsigned long ran;
-    char x[PGS_BN254],s[PGS_BN254],y[PGS_BN254],client_id[100],sst[4*PFS_BN254],token[2*PFS_BN254+1],sec[2*PFS_BN254+1],permit[2*PFS_BN254+1],xcid[2*PFS_BN254+1],xid[2*PFS_BN254+1],e[12*PFS_BN254],f[12*PFS_BN254];
-    char hcid[PFS_BN254],hsid[PFS_BN254],hid[2*PFS_BN254+1],htid[2*PFS_BN254+1],h[PGS_BN254];
+    char x[PGS_BN254CX],s[PGS_BN254CX],y[PGS_BN254CX],client_id[100],sst[4*PFS_BN254CX],token[2*PFS_BN254CX+1],sec[2*PFS_BN254CX+1],permit[2*PFS_BN254CX+1],xcid[2*PFS_BN254CX+1],xid[2*PFS_BN254CX+1],e[12*PFS_BN254CX],f[12*PFS_BN254CX];
+    char hcid[PFS_BN254CX],hsid[PFS_BN254CX],hid[2*PFS_BN254CX+1],htid[2*PFS_BN254CX+1],h[PGS_BN254CX];
 #ifdef FULL
-    char r[PGS_BN254],z[2*PFS_BN254+1],w[PGS_BN254],t[2*PFS_BN254+1];
-    char g1[12*PFS_BN254],g2[12*PFS_BN254];
-    char ck[PAS_BN254],sk[PAS_BN254];
+    char r[PGS_BN254CX],z[2*PFS_BN254CX+1],w[PGS_BN254CX],t[2*PFS_BN254CX+1];
+    char g1[12*PFS_BN254CX],g2[12*PFS_BN254CX];
+    char ck[MPIN_PAS],sk[MPIN_PAS];
 #endif
     octet S= {0,sizeof(s),s};
     octet X= {0,sizeof(x),x};
@@ -552,13 +552,13 @@ int mpin_BN254(csprng *RNG)
     char idhex[100];
 
     // Trusted Authority set-up
-    MPIN_BN254_RANDOM_GENERATE(RNG,&S);
+    MPIN_BN254CX_RANDOM_GENERATE(RNG,&S);
     printf("Master Secret= ");
     OCT_output(&S);
 
     // Create Client Identity
     OCT_jstring(&CLIENT_ID,"testUser@miracl.com");
-    HASH_ID(HASH_TYPE_MPIN_BN254,&CLIENT_ID,&HCID);  // Either Client or TA calculates Hash(ID) - you decide!
+    HASH_ID(HASH_TYPE_MPIN_BN254CX,&CLIENT_ID,&HCID);  // Either Client or TA calculates Hash(ID) - you decide!
 
     printf("Client ID Hash= ");
     OCT_output(&HCID);
@@ -567,12 +567,12 @@ int mpin_BN254(csprng *RNG)
     OCT_toHex(&CLIENT_ID,idhex);
     printf("Client ID= %s\n",idhex);// OCT_toHex(&CLIENT_ID); printf("\n");
 
-    MPIN_BN254_GET_CLIENT_SECRET(&S,&HCID,&TOKEN);
+    MPIN_BN254CX_GET_CLIENT_SECRET(&S,&HCID,&TOKEN);
     printf("Client Secret= ");
     OCT_output(&TOKEN);
 
 // Client and Server are issued secrets by DTA
-    MPIN_BN254_GET_SERVER_SECRET(&S,&SST);
+    MPIN_BN254CX_GET_SERVER_SECRET(&S,&SST);
     printf("Server Secret= ");
     OCT_output(&SST);
 
@@ -581,26 +581,26 @@ int mpin_BN254(csprng *RNG)
     // Client extracts PIN from secret to create Token
     pin=1234;
     printf("Client extracts PIN= %d\n",pin);
-    MPIN_BN254_EXTRACT_PIN(HASH_TYPE_MPIN_BN254,&CLIENT_ID,pin,&TOKEN);
+    MPIN_BN254CX_EXTRACT_PIN(HASH_TYPE_MPIN_BN254CX,&CLIENT_ID,pin,&TOKEN);
     printf("Client Token= ");
     OCT_output(&TOKEN);
 
 #ifdef FULL
-    MPIN_BN254_PRECOMPUTE(&TOKEN,&HCID,NULL,&G1,&G2);
+    MPIN_BN254CX_PRECOMPUTE(&TOKEN,&HCID,NULL,&G1,&G2);
 #endif
 
 #ifdef PERMITS
     // Client gets "Time Permit" from DTA
     printf("Client gets Time Permit\n");
 
-    MPIN_BN254_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_BN254,date,&S,&HCID,&PERMIT);
+    MPIN_BN254CX_GET_CLIENT_PERMIT(HASH_TYPE_MPIN_BN254CX,date,&S,&HCID,&PERMIT);
     printf("Time Permit= ");
     OCT_output(&PERMIT);
 
     // This encoding makes Time permit look random
-    if (MPIN_BN254_ENCODING(RNG,&PERMIT)!=0) printf("Encoding error\n");
+    if (MPIN_BN254CX_ENCODING(RNG,&PERMIT)!=0) printf("Encoding error\n");
     // printf("Encoded Time Permit= "); OCT_output(&PERMIT);
-    if (MPIN_BN254_DECODING(&PERMIT)!=0) printf("Decoding error\n");
+    if (MPIN_BN254CX_DECODING(&PERMIT)!=0) printf("Decoding error\n");
     // printf("Decoded Time Permit= "); OCT_output(&PERMIT);
 #endif
 
@@ -665,31 +665,31 @@ int mpin_BN254(csprng *RNG)
 #ifdef SINGLE_PASS
     int timeValue;
     printf("MPIN Single Pass\n");
-    timeValue = MPIN_BN254_GET_TIME();
+    timeValue = MPIN_BN254CX_GET_TIME();
 
-    rtn=MPIN_BN254_CLIENT(HASH_TYPE_MPIN_BN254,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT,NULL,timeValue,&Y);
+    rtn=MPIN_BN254CX_CLIENT(HASH_TYPE_MPIN_BN254CX,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT,NULL,timeValue,&Y);
 
     if (rtn != 0)
     {
-        printf("MPIN_BN254_CLIENT ERROR %d\n", rtn);
+        printf("MPIN_BN254CX_CLIENT ERROR %d\n", rtn);
         return 1;
     }
 
 #ifdef FULL
-    MPIN_BN254_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  // Also Send Z=r.ID to Server, remember random r
+    MPIN_BN254CX_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  // Also Send Z=r.ID to Server, remember random r
 #endif
 
 
-    rtn=MPIN_BN254_SERVER(HASH_TYPE_MPIN_BN254,date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,pID,NULL,timeValue);
+    rtn=MPIN_BN254CX_SERVER(HASH_TYPE_MPIN_BN254CX,date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,pID,NULL,timeValue);
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_BN254,&CLIENT_ID,&HSID);  // new
-    MPIN_BN254_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  // Also send T=w.ID to client, remember random w
+    HASH_ID(HASH_TYPE_MPIN_BN254CX,&CLIENT_ID,&HSID);  // new
+    MPIN_BN254CX_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  // Also send T=w.ID to client, remember random w
 #endif
 
 #else // SINGLE_PASS
     printf("MPIN Multi Pass\n");
-    if (MPIN_BN254_CLIENT_1(HASH_TYPE_MPIN_BN254,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT)!=0)
+    if (MPIN_BN254CX_CLIENT_1(HASH_TYPE_MPIN_BN254CX,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT)!=0)
     {
         printf("Error from Client side - First Pass\n");
         return 0;
@@ -698,23 +698,23 @@ int mpin_BN254(csprng *RNG)
     // Send U=x.ID to server, and recreate secret from token and pin
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_BN254,&CLIENT_ID,&HCID);
-    MPIN_BN254_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  // Also Send Z=r.ID to Server, remember random r, DH component
+    HASH_ID(HASH_TYPE_MPIN_BN254CX,&CLIENT_ID,&HCID);
+    MPIN_BN254CX_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  // Also Send Z=r.ID to Server, remember random r, DH component
 #endif
 
     // Server calculates H(ID) and H(ID)+H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp.
-    MPIN_BN254_SERVER_1(HASH_TYPE_MPIN_BN254,date,pID,pHID,pHTID);
+    MPIN_BN254CX_SERVER_1(HASH_TYPE_MPIN_BN254CX,date,pID,pHID,pHTID);
 
     // Server generates Random number Y and sends it to Client
-    MPIN_BN254_RANDOM_GENERATE(RNG,&Y);
+    MPIN_BN254CX_RANDOM_GENERATE(RNG,&Y);
 
 #ifdef FULL
-    HASH_ID(HASH_TYPE_MPIN_BN254,&CLIENT_ID,&HSID); //new
-    MPIN_BN254_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  // Also send T=w.ID to client, remember random w, DH component
+    HASH_ID(HASH_TYPE_MPIN_BN254CX,&CLIENT_ID,&HSID); //new
+    MPIN_BN254CX_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  // Also send T=w.ID to client, remember random w, DH component
 #endif
 
     // Client Second Pass: Inputs Client secret SEC, x and y. Outputs -(x+y)*SEC
-    if (MPIN_BN254_CLIENT_2(&X,&Y,&SEC)!=0)
+    if (MPIN_BN254CX_CLIENT_2(&X,&Y,&SEC)!=0)
     {
         printf("Error from Client side - Second Pass\n");
         return 1;
@@ -722,7 +722,7 @@ int mpin_BN254(csprng *RNG)
 
     // Server Second phase. Inputs hashed client id, random Y, -(x+y)*SEC, xID and xCID and Server secret SST. E and F help kangaroos to find error.
     // If PIN error not required, set E and F = NULL
-    rtn=MPIN_BN254_SERVER_2(date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,NULL);
+    rtn=MPIN_BN254CX_SERVER_2(date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,NULL);
 #endif // SINGLE_PASS
 
     if (rtn!=0)
@@ -730,7 +730,7 @@ int mpin_BN254(csprng *RNG)
         printf("Server says - Bad Pin.\n");
 #ifdef PINERROR
 
-        err=MPIN_BN254_KANGAROO(&E,&F);
+        err=MPIN_BN254CX_KANGAROO(&E,&F);
         if (err) printf("(Client PIN is out by %d)\n",err);
 
 #endif
@@ -745,13 +745,13 @@ int mpin_BN254(csprng *RNG)
 
 #ifdef FULL
 
-    HASH_ALL(HASH_TYPE_MPIN_BN254,&HCID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);  // new
-    MPIN_BN254_CLIENT_KEY(HASH_TYPE_MPIN_BN254,&G1,&G2,pin,&R,&X,&H,&T,&CK);      // new H
+    HASH_ALL(HASH_TYPE_MPIN_BN254CX,&HCID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);  // new
+    MPIN_BN254CX_CLIENT_KEY(HASH_TYPE_MPIN_BN254CX,&G1,&G2,pin,&R,&X,&H,&T,&CK);      // new H
     printf("Client Key = ");
     OCT_output(&CK);
 
-    HASH_ALL(HASH_TYPE_MPIN_BN254,&HSID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);
-    MPIN_BN254_SERVER_KEY(HASH_TYPE_MPIN_BN254,&Z,&SST,&W,&H,pHID,pxID,pxCID,&SK); // new H,pHID
+    HASH_ALL(HASH_TYPE_MPIN_BN254CX,&HSID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);
+    MPIN_BN254CX_SERVER_KEY(HASH_TYPE_MPIN_BN254CX,&Z,&SST,&W,&H,pHID,pxID,pxCID,&SK); // new H,pHID
     printf("Server Key = ");
     OCT_output(&SK);
 #endif
@@ -890,8 +890,8 @@ int main()
 
     CREATE_CSPRNG(&RNG,&RAW);   // initialise strong RNG
 
-    printf("\nTesting MPIN protocols for curve BN254\n");
-    mpin_BN254(&RNG);
+    printf("\nTesting MPIN protocols for curve BN254CX\n");
+    mpin_BN254CX(&RNG);
     printf("\nTesting ECDH protocols for curve ED25519\n");
     ecdh_ED25519(&RNG);
 #if CHUNK!=16
@@ -908,4 +908,6 @@ int main()
 
     KILL_CSPRNG(&RNG);
 }
+
+
 

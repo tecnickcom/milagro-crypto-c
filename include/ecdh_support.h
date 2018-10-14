@@ -1,31 +1,26 @@
 /*
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
+	Licensed to the Apache Software Foundation (ASF) under one
+	or more contributor license agreements.  See the NOTICE file
+	distributed with this work for additional information
+	regarding copyright ownership.  The ASF licenses this file
+	to you under the Apache License, Version 2.0 (the
+	"License"); you may not use this file except in compliance
+	with the License.  You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
+	Unless required by applicable law or agreed to in writing,
+	software distributed under the License is distributed on an
+	"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+	KIND, either express or implied.  See the License for the
+	specific language governing permissions and limitations
+	under the License.
 */
 
 /**
  * @file ecdh_support.h
  * @author Mike Scott
- * @date January 2017
- * @brief Auxiliary Functions for ECDH
- *
- * Allows some user configuration
- * defines structures
- * declares functions
+ * @brief ECDH Support Header File
  *
  */
 
@@ -35,8 +30,6 @@ under the License.
 #include "amcl.h"
 
 /* Auxiliary Functions */
-
-/* general purpose hash function w=hash(p|n|x|y) */
 
 /** @brief general purpose hash function w=hash(p|n|x|y)
  *
@@ -67,9 +60,6 @@ extern void HASH(int h,octet *I,octet *O);
 	@return 0 for bad parameters, else 1
  */
 extern int HMAC(int h,octet *M,octet *K,int len,octet *tag);
-
-/*extern void KDF1(octet *,int,octet *);*/
-
 /**	@brief Key Derivation Function - generates key K from inputs Z and P
  *
 	IEEE-1363 KDF2 Key Derivation Function. Uses SHA256 internally.
